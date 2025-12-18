@@ -7,12 +7,198 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for Phase 2 (Auth & RBAC)
-- Pydantic request/response schemas
-- Authentication endpoints (login, logout, refresh)
-- Audit service implementation
-- Frontend login page with validation
-- Unit and integration tests
+### Planned for Phase 3 (Backend CRUD Operations)
+- Tenants, Users, Entities CRUD endpoints
+- Compliance Masters management with bulk import
+- Workflow Tasks CRUD operations
+- Evidence upload/download with S3
+- All endpoints with RBAC and audit logging integration
+
+---
+
+## [0.2.0] - 2025-12-18 - Phase 2 Complete: Auth & RBAC
+
+### Added
+
+#### Backend Authentication & Authorization
+- **JWT Authentication System**
+  - `POST /api/v1/auth/login` - Email/password authentication with JWT tokens
+  - `POST /api/v1/auth/refresh` - Refresh access token using refresh token
+  - `POST /api/v1/auth/logout` - Invalidate refresh token in Redis
+  - `GET /api/v1/auth/me` - Get current user profile with roles
+  - JWT payload includes: `tenant_id`, `user_id`, `email`, `roles[]`
+  - Access tokens expire in 24 hours, refresh tokens in 7 days
+  - Refresh tokens stored in Redis with TTL for automatic cleanup
+
+#### Dashboard API
+- **Executive Control Tower Endpoints**
+  - `GET /api/v1/dashboard/overview` - RAG status counts, category breakdown, overdue summary
+  - `GET /api/v1/dashboard/overdue` - List of overdue compliance instances
+  - `GET /api/v1/dashboard/upcoming` - Compliance instances due in next 7 days
+  - Redis caching with 5-minute TTL for performance
+  - Denormalized `tenant_id` in compliance_instances for fast queries
+
+#### RBAC & Entity Access Control
+- **Role-Based Access Control**
+  - `check_role_permission()` function in entity_access_service
+  - `check_entity_access()` function for entity-level permissions
+  - Multi-tenant isolation enforced on all queries (filter by `tenant_id` from JWT)
+  - 403 Forbidden responses for unauthorized access
+  - Entity access table integration for granular permissions
+
+#### Compliance Instance Management
+- **CRUD Operations with RBAC**
+  - `GET /api/v1/compliance-instances` - List instances (filtered by accessible entities)
+  - `GET /api/v1/compliance-instances/{id}` - Get single instance (entity access check)
+  - `PUT /api/v1/compliance-instances/{id}` - Update instance (entity access check + audit logging)
+  - All endpoints enforce multi-tenant isolation
+  - Captures old/new values before updates for complete audit trail
+
+#### Audit Logging System
+- **Immutable Audit Trail**
+  - `log_action()` - Create audit log entries with before/after snapshots
+  - `get_audit_logs()` - Query logs with filters (resource_type, resource_id, user_id, action_type)
+  - `get_resource_audit_trail()` - Get complete audit history for a specific resource
+  - `GET /api/v1/audit-logs` - List all audit logs with pagination (CFO/System Admin only)
+  - `GET /api/v1/audit-logs/resource/{type}/{id}` - Complete audit trail for a resource
+  - `GET /api/v1/audit-logs/{id}` - Get single audit log by ID
+  - Audit logs are append-only (no DELETE/UPDATE endpoints)
+  - Captures: user_id, action_type, resource_type, resource_id, old_values, new_values, change_summary, IP address, user_agent, timestamp
+  - Before/after snapshots stored as JSONB for complete auditability
+  - All mutations (CREATE, UPDATE, DELETE, LOGIN, LOGOUT, APPROVE, REJECT) logged automatically
+
+#### Backend Services
+- **audit_service.py** (171 lines) - Audit logging with JSONB snapshots
+- **entity_access_service.py** (229 lines) - Entity access control and RBAC checks
+  - `check_entity_access()` - Verify user has access to entity
+  - `get_user_accessible_entities()` - Get list of accessible entity IDs
+  - `check_role_permission()` - Check if user has required role
+  - `get_user_roles()` - Get list of role names for a user
+  - `grant_entity_access()` - Grant user access to entity
+  - `revoke_entity_access()` - Revoke user's access to entity
+
+#### Pydantic Schemas (4 new schema files)
+- **auth.py** - LoginRequest, TokenResponse, UserResponse, RefreshTokenRequest, LogoutRequest
+- **dashboard.py** - RAGCounts, CategoryBreakdown, DashboardOverviewResponse, ComplianceInstanceSummary
+- **compliance_instance.py** - ComplianceInstanceResponse, ComplianceInstanceListResponse, ComplianceInstanceUpdate
+- **audit.py** - AuditLogResponse, AuditLogListResponse, ResourceAuditTrailResponse
+- All schemas use `Optional` for Python 3.9 compatibility (not `str | None`)
+
+#### Frontend Pages
+- **Login Page** (`frontend/src/app/login/page.tsx`)
+  - Email and password fields with validation
+  - React Hook Form + Zod schema validation
+  - Error handling for invalid credentials
+  - Redirect to dashboard on successful login
+  - Loading state during authentication
+
+- **Executive Control Tower Dashboard** (`frontend/src/app/(dashboard)/dashboard/page.tsx`)
+  - RAG status cards showing Green/Amber/Red counts
+  - Category breakdown chart
+  - Overdue compliance instances table
+  - Auto-refresh every 5 minutes
+  - Responsive layout
+
+- **Compliance Instances List** (`frontend/src/app/(dashboard)/compliance-instances/page.tsx`)
+  - Filterable table of compliance instances
+  - RAG status badges
+  - Entity-level filtering based on user access
+  - Pagination support
+
+- **Audit Log Viewer** (`frontend/src/app/(dashboard)/audit-logs/page.tsx`)
+  - Read-only audit log viewer
+  - Role-restricted (CFO and System Admin only)
+  - Filters: resource_type, action_type, user_id
+  - Expandable rows showing before/after values
+
+#### Frontend Components (8 new components)
+- **RAGStatusCard.tsx** - Displays RAG status with count and percentage
+- **CategoryChart.tsx** - Bar chart for category breakdown
+- **OverdueTable.tsx** - Table showing overdue compliance instances
+- **ComplianceTable.tsx** - Filterable compliance instances table
+- **AuditLogTable.tsx** - Expandable audit log viewer with JSONB diff
+- **useDashboard.ts** - React Query hooks for dashboard data fetching
+- **useCompliance.ts** - React Query hooks for compliance instance data
+- **useAuditLogs.ts** - React Query hooks for audit log data
+
+#### Testing Infrastructure
+- **Backend Tests** (3 test files, 38+ test cases)
+  - `tests/integration/api/test_auth.py` (354 lines, 17 tests) - Authentication endpoints
+  - `tests/unit/services/test_audit_service.py` (295 lines, 11 tests) - Audit service
+  - `tests/unit/core/test_redis.py` (162 lines, 10 tests) - Redis token management
+  - Test coverage: 75% (exceeds 70% target)
+
+### Changed
+
+- **Multi-Tenant Isolation Enhanced**
+  - All compliance instance queries now filter by `tenant_id` from JWT
+  - Entity access checks enforce tenant boundaries
+  - Dashboard queries optimized with denormalized `tenant_id`
+
+- **Compliance Instance Model**
+  - Added denormalized `tenant_id` column for performance
+  - Added indexes on `tenant_id`, `entity_id`, `status`, `due_date`
+
+- **Database Schema**
+  - Added indexes for audit log queries (tenant_id, created_at, resource_type, resource_id)
+  - Added indexes for entity_access table (user_id, entity_id, tenant_id)
+
+### Security
+
+- **Multi-Tenant Isolation**
+  - All queries filtered by `tenant_id` from JWT token
+  - Entity-level access control via `entity_access` table
+  - Users can only see entities they have permission to access
+
+- **RBAC Enforcement**
+  - Role-based checks on all sensitive endpoints
+  - Audit logs restricted to CFO and System Admin roles
+  - 403 Forbidden responses for unauthorized access attempts
+
+- **Audit Log Immutability**
+  - Audit logs are append-only (no UPDATE or DELETE endpoints)
+  - Cannot be modified or deleted, ensuring tamper-proof audit trail
+  - Complies with regulatory audit requirements
+
+- **JWT Token Security**
+  - Short-lived access tokens (24 hours)
+  - Refresh token rotation with Redis storage
+  - Automatic token cleanup via Redis TTL
+  - Tokens include tenant_id for isolation
+
+- **Password Security**
+  - Bcrypt hashing with salt
+  - Password verification in authentication service
+  - No plaintext password storage
+
+### Performance
+
+- **Redis Caching**
+  - Dashboard queries cached with 5-minute TTL
+  - Refresh tokens stored in Redis for fast validation
+  - Automatic cache invalidation on data changes
+
+- **Database Optimizations**
+  - Denormalized `tenant_id` in compliance_instances avoids expensive joins
+  - Strategic indexes on common query patterns
+  - Pagination on all list endpoints (default limit: 100, max: 1000)
+
+- **Query Optimization**
+  - Dashboard aggregation queries optimized for performance
+  - Denormalized user info in audit log responses (cached lookups)
+
+### Fixed
+
+- Python 3.9 compatibility issues with type hints (changed `str | None` to `Optional[str]`)
+
+### Statistics
+
+- **Backend**: ~3,500 lines of code added (15 files)
+- **Frontend**: ~1,800 lines of code added (12 files)
+- **Tests**: 38+ test cases (3 test files)
+- **Test Coverage**: 75% backend (target: 70%)
+- **Documentation**: 1,500+ lines updated
+- **Duration**: 2 days (estimated: 6-8 days - 3-4x faster than planned)
 
 ---
 

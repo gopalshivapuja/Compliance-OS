@@ -14,17 +14,23 @@ class AuditLog(Base, UUIDMixin):
     __tablename__ = "audit_logs"
 
     # Tenant scope (denormalized)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    tenant_id = Column(UUID(as_uuid=False), nullable=False, index=True)
 
     # Who performed the action
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user_id = Column(
+        UUID(as_uuid=False), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # What was the action
-    action_type = Column(String(50), nullable=False, index=True)  # CREATE, UPDATE, DELETE, APPROVE, REJECT, LOGIN, etc.
+    action_type = Column(
+        String(50), nullable=False, index=True
+    )  # CREATE, UPDATE, DELETE, APPROVE, REJECT, LOGIN, etc.
 
     # Which resource was affected
-    resource_type = Column(String(100), nullable=False, index=True)  # compliance_instance, evidence, user, etc.
-    resource_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+    resource_type = Column(
+        String(100), nullable=False, index=True
+    )  # compliance_instance, evidence, user, etc.
+    resource_id = Column(UUID(as_uuid=False), nullable=True, index=True)
 
     # Before/after snapshots for UPDATE actions
     old_values = Column(JSONB, nullable=True)  # Snapshot before change

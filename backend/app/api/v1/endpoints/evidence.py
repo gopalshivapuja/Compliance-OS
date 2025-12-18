@@ -21,7 +21,7 @@ async def list_evidence(
 ):
     """
     List evidence files for current tenant.
-    
+
     TODO: Implement listing logic with filters
     """
     return {
@@ -43,7 +43,7 @@ async def get_evidence(
 ):
     """
     Get evidence metadata by ID.
-    
+
     TODO: Implement get logic
     """
     return {
@@ -63,7 +63,7 @@ async def upload_evidence(
 ):
     """
     Upload evidence file.
-    
+
     TODO: Implement upload logic
     - Validate file (size, type)
     - Upload to S3
@@ -89,7 +89,7 @@ async def download_evidence(
 ):
     """
     Download evidence file (returns signed URL or file stream).
-    
+
     TODO: Implement download logic
     - Generate signed S3 URL
     - Or stream file directly
@@ -110,7 +110,7 @@ async def approve_evidence(
 ):
     """
     Approve evidence file.
-    
+
     TODO: Implement approval logic
     - Update approval_status
     - Set is_immutable = true
@@ -132,7 +132,7 @@ async def reject_evidence(
 ):
     """
     Reject evidence file.
-    
+
     TODO: Implement rejection logic
     - Update approval_status
     - Store rejection_reason
@@ -143,4 +143,3 @@ async def reject_evidence(
         "tenant_id": tenant_id,
         "user_id": current_user.get("user_id"),
     }
-

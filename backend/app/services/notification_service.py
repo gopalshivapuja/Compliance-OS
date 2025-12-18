@@ -8,4 +8,3 @@ Handles multi-channel notifications (email, Slack, in-app)
 # - In-app notifications (store in DB)
 # - Template rendering
 # - Reminder scheduling
-

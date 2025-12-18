@@ -28,10 +28,7 @@ api_router.include_router(
     prefix="/compliance-instances",
     tags=["Compliance Instances"],
 )
-api_router.include_router(
-    workflow_tasks.router, prefix="/workflow-tasks", tags=["Workflow Tasks"]
-)
+api_router.include_router(workflow_tasks.router, prefix="/workflow-tasks", tags=["Workflow Tasks"])
 api_router.include_router(evidence.router, prefix="/evidence", tags=["Evidence"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit Logs"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
-

@@ -5,27 +5,34 @@ This file contains common test fixtures used across all tests.
 """
 
 import pytest
+import os
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool
 
 from app.main import app
-from app.core.database import Base, get_db
+from app.core.database import get_db
+from app.models.base import Base
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.role import Role
+from app.models.audit_log import AuditLog
 from app.core.security import get_password_hash
 
 
-# Test database URL (in-memory SQLite for testing)
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+# PostgreSQL test database URL
+# Use separate test database on your existing PostgreSQL server
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql://gopal@localhost:5432/compliance_os_test"
+)
 
-# Create test engine
+# Create test engine with PostgreSQL
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
+    TEST_DATABASE_URL,
+    poolclass=NullPool,  # Don't pool connections in tests
+    echo=False,  # Set to True for SQL debugging
 )
 
 # Create test session
@@ -36,17 +43,23 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 def db_session():
     """
     Create a fresh database session for each test function.
+    Uses PostgreSQL test database with proper transaction rollback.
     """
-    # Create all tables
+    # Create all tables before test
     Base.metadata.create_all(bind=engine)
 
-    session = TestingSessionLocal()
+    # Create session
+    connection = engine.connect()
+    transaction = connection.begin()
+    session = TestingSessionLocal(bind=connection)
 
     try:
         yield session
     finally:
         session.close()
-        # Drop all tables after test
+        transaction.rollback()  # Rollback changes after each test
+        connection.close()
+        # Clean up all tables after test
         Base.metadata.drop_all(bind=engine)
 
 
@@ -77,9 +90,9 @@ def test_tenant(db_session):
     """
     tenant = Tenant(
         tenant_name="Test Company",
-        industry="Technology",
+        tenant_code="TEST001",
         contact_email="test@example.com",
-        is_active=True,
+        status="active",
     )
     db_session.add(tenant)
     db_session.commit()
@@ -95,9 +108,10 @@ def test_user(db_session, test_tenant):
     user = User(
         tenant_id=test_tenant.id,
         email="testuser@example.com",
-        full_name="Test User",
+        first_name="Test",
+        last_name="User",
         password_hash=get_password_hash("Test123!@#"),
-        is_active=True,
+        status="active",
     )
     db_session.add(user)
     db_session.commit()

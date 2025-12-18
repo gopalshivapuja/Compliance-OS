@@ -21,7 +21,7 @@ async def list_workflow_tasks(
 ):
     """
     List workflow tasks for current tenant.
-    
+
     TODO: Implement listing logic with filters
     """
     return {
@@ -43,7 +43,7 @@ async def get_workflow_task(
 ):
     """
     Get workflow task by ID.
-    
+
     TODO: Implement get logic
     """
     return {
@@ -59,7 +59,7 @@ async def create_workflow_task(
 ):
     """
     Create a new workflow task.
-    
+
     TODO: Implement creation logic
     """
     return {
@@ -76,7 +76,7 @@ async def update_workflow_task(
 ):
     """
     Update workflow task (e.g., status, assignment).
-    
+
     TODO: Implement update logic
     """
     return {
@@ -94,7 +94,7 @@ async def complete_task(
 ):
     """
     Mark task as completed.
-    
+
     TODO: Implement completion logic
     """
     return {
@@ -112,7 +112,7 @@ async def get_task_comments(
 ):
     """
     Get comments for a task.
-    
+
     TODO: Implement comments retrieval logic
     """
     return {
@@ -130,7 +130,7 @@ async def add_task_comment(
 ):
     """
     Add a comment to a task.
-    
+
     TODO: Implement comment creation logic
     """
     return {
@@ -138,4 +138,3 @@ async def add_task_comment(
         "tenant_id": tenant_id,
         "user_id": current_user.get("user_id"),
     }
-

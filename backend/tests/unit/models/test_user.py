@@ -12,9 +12,10 @@ def test_user_creation(db_session, test_tenant):
     user = User(
         tenant_id=test_tenant.id,
         email="newuser@example.com",
-        full_name="New User",
+        first_name="New",
+        last_name="User",
         password_hash=get_password_hash("Password123!"),
-        is_active=True,
+        status="active",
     )
 
     db_session.add(user)
@@ -24,7 +25,7 @@ def test_user_creation(db_session, test_tenant):
     assert user.id is not None
     assert user.email == "newuser@example.com"
     assert user.full_name == "New User"
-    assert user.is_active is True
+    assert user.status == "active"
     assert user.tenant_id == test_tenant.id
 
 
@@ -35,8 +36,9 @@ def test_user_password_hashing(db_session, test_tenant):
     user = User(
         tenant_id=test_tenant.id,
         email="test@example.com",
-        full_name="Test User",
-        is_active=True,
+        first_name="Test",
+        last_name="User",
+        status="active",
     )
 
     # Set password (should be hashed)
@@ -65,9 +67,10 @@ def test_user_tenant_relationship(db_session, test_tenant):
     user = User(
         tenant_id=test_tenant.id,
         email="relationtest@example.com",
-        full_name="Relation Test",
+        first_name="Relation",
+        last_name="Test",
         password_hash=get_password_hash("Test123!"),
-        is_active=True,
+        status="active",
     )
 
     db_session.add(user)

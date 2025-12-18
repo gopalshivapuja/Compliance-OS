@@ -51,4 +51,3 @@ async def health_check():
         "database": "connected",  # TODO: Add actual DB health check
         "redis": "connected",  # TODO: Add actual Redis health check
     }
-

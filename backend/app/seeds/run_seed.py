@@ -94,7 +94,9 @@ def seed_compliance_masters(db: Session):
             )
             db.add(compliance_master)
             created_count += 1
-            print(f"  ✓ Created: {master_data['compliance_code']} - {master_data['compliance_name']}")
+            print(
+                f"  ✓ Created: {master_data['compliance_code']} - {master_data['compliance_name']}"
+            )
         else:
             skipped_count += 1
             print(f"  ⊘ Already exists: {master_data['compliance_code']}")

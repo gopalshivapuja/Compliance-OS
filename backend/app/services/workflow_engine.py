@@ -7,4 +7,3 @@ Handles task lifecycle, assignments, and escalations
 # - Assignment logic (user or role)
 # - Escalation rules (T-3, due date, +3 overdue)
 # - Dependency checking
-

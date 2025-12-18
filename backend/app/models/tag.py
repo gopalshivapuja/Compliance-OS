@@ -12,7 +12,9 @@ class Tag(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
 
     __tablename__ = "tags"
 
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     tag_name = Column(String(100), nullable=False, index=True)
     tag_color = Column(String(7), nullable=True)  # Hex color code, e.g., #FF5733
 

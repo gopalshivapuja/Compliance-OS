@@ -11,9 +11,18 @@ from app.models.base import Base, UUIDMixin, TenantScopedMixin, AuditMixin
 entity_access = Table(
     "entity_access",
     Base.metadata,
-    Column("user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
-    Column("entity_id", UUID(as_uuid=True), ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True),
-    Column("tenant_id", UUID(as_uuid=True), nullable=False, index=True),  # Denormalized for performance
+    Column(
+        "user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    ),
+    Column(
+        "entity_id",
+        UUID(as_uuid=True),
+        ForeignKey("entities.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "tenant_id", UUID(as_uuid=True), nullable=False, index=True
+    ),  # Denormalized for performance
 )
 
 
@@ -22,7 +31,9 @@ class Entity(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
 
     __tablename__ = "entities"
 
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     entity_code = Column(String(50), nullable=False, index=True)
     entity_name = Column(String(255), nullable=False, index=True)
     entity_type = Column(String(50), nullable=True)  # Company, Branch, LLP, etc.
@@ -47,8 +58,12 @@ class Entity(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
 
     # Relationships
     tenant = relationship("Tenant", back_populates="entities")
-    users_with_access = relationship("User", secondary=entity_access, back_populates="accessible_entities")
-    compliance_instances = relationship("ComplianceInstance", back_populates="entity", cascade="all, delete-orphan")
+    users_with_access = relationship(
+        "User", secondary=entity_access, back_populates="accessible_entities"
+    )
+    compliance_instances = relationship(
+        "ComplianceInstance", back_populates="entity", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Entity {self.entity_code}: {self.entity_name}>"

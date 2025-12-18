@@ -28,4 +28,3 @@ def escalate_overdue_items():
     """Escalate items overdue by 3+ days to CFO"""
     # TODO: Implement escalation logic
     pass
-

@@ -21,4 +21,3 @@ def recalculate_compliance_status():
     """Recalculate status and RAG for all instances (runs hourly)"""
     # TODO: Implement status recalculation logic
     pass
-

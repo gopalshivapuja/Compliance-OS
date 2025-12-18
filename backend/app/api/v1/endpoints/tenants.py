@@ -16,7 +16,7 @@ async def list_tenants(
 ):
     """
     List tenants (admin only).
-    
+
     TODO: Implement listing logic
     """
     return {"message": "List tenants endpoint - TODO: Implement"}
@@ -30,7 +30,7 @@ async def get_tenant(
 ):
     """
     Get tenant by ID.
-    
+
     TODO: Implement get logic
     """
     return {"message": f"Get tenant {tenant_id} - TODO: Implement"}
@@ -43,7 +43,7 @@ async def create_tenant(
 ):
     """
     Create a new tenant (admin only).
-    
+
     TODO: Implement creation logic
     """
     return {"message": "Create tenant endpoint - TODO: Implement"}
@@ -57,8 +57,7 @@ async def update_tenant(
 ):
     """
     Update tenant (admin only).
-    
+
     TODO: Implement update logic
     """
     return {"message": f"Update tenant {tenant_id} - TODO: Implement"}
-

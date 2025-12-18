@@ -13,13 +13,23 @@ class ComplianceInstance(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
     __tablename__ = "compliance_instances"
 
     # Denormalized tenant_id for performance (avoids join with entities)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # References
     compliance_master_id = Column(
-        UUID(as_uuid=True), ForeignKey("compliance_masters.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("compliance_masters.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    entity_id = Column(UUID(as_uuid=True), ForeignKey("entities.id", ondelete="CASCADE"), nullable=False, index=True)
+    entity_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Time period
     period_start = Column(Date, nullable=False, index=True)
@@ -29,15 +39,23 @@ class ComplianceInstance(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
     # Status tracking
     status = Column(String(50), nullable=False, default="Not Started", index=True)
     # Not Started, In Progress, Review, Pending Approval, Filed, Completed, Blocked, Overdue
-    rag_status = Column(String(10), nullable=False, default="Green", index=True)  # Green, Amber, Red
+    rag_status = Column(
+        String(10), nullable=False, default="Green", index=True
+    )  # Green, Amber, Red
 
     # Ownership
-    owner_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
-    approver_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    owner_user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    approver_user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Dependency tracking (blocking instance)
     blocking_compliance_instance_id = Column(
-        UUID(as_uuid=True), ForeignKey("compliance_instances.id", ondelete="SET NULL"), nullable=True
+        UUID(as_uuid=True),
+        ForeignKey("compliance_instances.id", ondelete="SET NULL"),
+        nullable=True,
     )
 
     # Completion tracking
@@ -57,11 +75,19 @@ class ComplianceInstance(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
     approver = relationship("User", foreign_keys=[approver_user_id])
 
     # Self-referential for blocking dependencies
-    blocking_instance = relationship("ComplianceInstance", remote_side="ComplianceInstance.id", foreign_keys=[blocking_compliance_instance_id])
+    blocking_instance = relationship(
+        "ComplianceInstance",
+        remote_side="ComplianceInstance.id",
+        foreign_keys=[blocking_compliance_instance_id],
+    )
 
     # Child relationships
-    workflow_tasks = relationship("WorkflowTask", back_populates="compliance_instance", cascade="all, delete-orphan")
-    evidence = relationship("Evidence", back_populates="compliance_instance", cascade="all, delete-orphan")
+    workflow_tasks = relationship(
+        "WorkflowTask", back_populates="compliance_instance", cascade="all, delete-orphan"
+    )
+    evidence = relationship(
+        "Evidence", back_populates="compliance_instance", cascade="all, delete-orphan"
+    )
 
     # Composite indexes for common queries
     __table_args__ = (
@@ -75,7 +101,13 @@ class ComplianceInstance(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
             unique=True,
         ),
         # Composite index for dashboard queries
-        Index("idx_compliance_instances_tenant_status_due", "tenant_id", "status", "rag_status", "due_date"),
+        Index(
+            "idx_compliance_instances_tenant_status_due",
+            "tenant_id",
+            "status",
+            "rag_status",
+            "due_date",
+        ),
         # Index for entity-based queries
         Index("idx_compliance_instances_entity_status", "entity_id", "status", "due_date"),
     )

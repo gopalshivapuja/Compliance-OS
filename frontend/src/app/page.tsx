@@ -1,17 +1,27 @@
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/lib/store/auth-store'
+import { Spinner } from '@/components/ui/Spinner'
+
 export default function HomePage() {
+  const router = useRouter()
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+
+  useEffect(() => {
+    // Redirect to dashboard if authenticated, otherwise to login
+    if (isAuthenticated) {
+      router.push('/dashboard')
+    } else {
+      router.push('/login')
+    }
+  }, [isAuthenticated, router])
+
+  // Show loading spinner while redirecting
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Compliance OS V1
-        </h1>
-        <p className="text-gray-600">
-          Welcome to Compliance OS - FP&A Control Tower for GCC Operations
-        </p>
-        <p className="text-sm text-gray-500 mt-4">
-          Frontend scaffolding complete. Ready for implementation.
-        </p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <Spinner size="lg" />
     </div>
   )
 }

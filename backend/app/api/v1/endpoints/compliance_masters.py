@@ -19,7 +19,7 @@ async def list_compliance_masters(
 ):
     """
     List compliance masters for current tenant.
-    
+
     TODO: Implement listing logic with filters
     """
     return {
@@ -37,7 +37,7 @@ async def get_compliance_master(
 ):
     """
     Get compliance master by ID.
-    
+
     TODO: Implement get logic
     """
     return {
@@ -53,7 +53,7 @@ async def create_compliance_master(
 ):
     """
     Create a new compliance master.
-    
+
     TODO: Implement creation logic
     """
     return {
@@ -70,11 +70,10 @@ async def update_compliance_master(
 ):
     """
     Update compliance master.
-    
+
     TODO: Implement update logic
     """
     return {
         "message": f"Update compliance master {compliance_master_id} - TODO: Implement",
         "tenant_id": tenant_id,
     }
-

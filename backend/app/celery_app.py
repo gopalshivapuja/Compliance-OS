@@ -20,4 +20,3 @@ celery_app.conf.update(
     timezone="Asia/Kolkata",  # IST
     enable_utc=True,
 )
-

@@ -11,9 +11,15 @@ from app.models.base import Base, UUIDMixin, AuditMixin
 user_roles = Table(
     "user_roles",
     Base.metadata,
-    Column("user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
-    Column("role_id", UUID(as_uuid=True), ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
-    Column("tenant_id", UUID(as_uuid=True), nullable=False, index=True),  # Denormalized for performance
+    Column(
+        "user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    ),
+    Column(
+        "role_id", UUID(as_uuid=True), ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True
+    ),
+    Column(
+        "tenant_id", UUID(as_uuid=True), nullable=False, index=True
+    ),  # Denormalized for performance
 )
 
 
@@ -25,7 +31,9 @@ class Role(Base, UUIDMixin, AuditMixin):
     role_code = Column(String(50), unique=True, nullable=False, index=True)
     role_name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
-    is_system_role = Column(String(10), nullable=False, default="no")  # yes/no - system roles cannot be deleted
+    is_system_role = Column(
+        String(10), nullable=False, default="no"
+    )  # yes/no - system roles cannot be deleted
 
     # Relationships
     users = relationship("User", secondary=user_roles, back_populates="roles")

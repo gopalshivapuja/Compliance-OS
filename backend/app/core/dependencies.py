@@ -19,30 +19,30 @@ def get_current_user(
 ) -> dict:
     """
     Dependency to get current authenticated user from JWT token.
-    
+
     Returns:
         Dictionary with user_id, tenant_id, roles, etc.
-    
+
     Raises:
         HTTPException: If token is invalid or missing
     """
     token = credentials.credentials
     payload = decode_access_token(token)
-    
+
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return payload
 
 
 def get_current_tenant_id(current_user: dict = Depends(get_current_user)) -> str:
     """
     Dependency to extract tenant_id from current user.
-    
+
     Returns:
         Tenant ID as string
     """
@@ -58,12 +58,13 @@ def get_current_tenant_id(current_user: dict = Depends(get_current_user)) -> str
 def require_role(required_role: str):
     """
     Dependency factory to require a specific role.
-    
+
     Usage:
         @app.get("/admin")
         async def admin_route(user: dict = Depends(require_role("admin"))):
             ...
     """
+
     def role_checker(current_user: dict = Depends(get_current_user)) -> dict:
         user_roles = current_user.get("roles", [])
         if required_role not in user_roles:
@@ -72,6 +73,5 @@ def require_role(required_role: str):
                 detail=f"Required role: {required_role}",
             )
         return current_user
-    
-    return role_checker
 
+    return role_checker

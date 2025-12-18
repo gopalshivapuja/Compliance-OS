@@ -1,7 +1,18 @@
 """
 Evidence model for audit-ready file storage
 """
-from sqlalchemy import Column, String, Text, Boolean, Integer, BigInteger, ForeignKey, Table, Index, DateTime
+from sqlalchemy import (
+    Column,
+    String,
+    Text,
+    Boolean,
+    Integer,
+    BigInteger,
+    ForeignKey,
+    Table,
+    Index,
+    DateTime,
+)
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from app.models.base import Base, UUIDMixin, TenantScopedMixin, AuditMixin
@@ -11,8 +22,15 @@ from app.models.base import Base, UUIDMixin, TenantScopedMixin, AuditMixin
 evidence_tag_mappings = Table(
     "evidence_tag_mappings",
     Base.metadata,
-    Column("evidence_id", UUID(as_uuid=True), ForeignKey("evidence.id", ondelete="CASCADE"), primary_key=True),
-    Column("tag_id", UUID(as_uuid=True), ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True),
+    Column(
+        "evidence_id",
+        UUID(as_uuid=True),
+        ForeignKey("evidence.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "tag_id", UUID(as_uuid=True), ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True
+    ),
 )
 
 
@@ -21,11 +39,16 @@ class Evidence(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
 
     __tablename__ = "evidence"
 
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Reference to compliance instance
     compliance_instance_id = Column(
-        UUID(as_uuid=True), ForeignKey("compliance_instances.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("compliance_instances.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # File details
@@ -42,14 +65,20 @@ class Evidence(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
     )  # Points to previous version
 
     # Approval workflow
-    approval_status = Column(String(50), nullable=False, default="Pending", index=True)  # Pending, Approved, Rejected
-    approved_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approval_status = Column(
+        String(50), nullable=False, default="Pending", index=True
+    )  # Pending, Approved, Rejected
+    approved_by_user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     approved_at = Column(DateTime(timezone=True), nullable=True)
     approval_remarks = Column(Text, nullable=True)
     rejection_reason = Column(Text, nullable=True)
 
     # Immutability flag
-    is_immutable = Column(Boolean, default=False, nullable=False)  # Once approved, cannot be deleted
+    is_immutable = Column(
+        Boolean, default=False, nullable=False
+    )  # Once approved, cannot be deleted
 
     # Metadata
     description = Column(Text, nullable=True)
@@ -61,7 +90,9 @@ class Evidence(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
     tags = relationship("Tag", secondary=evidence_tag_mappings, back_populates="evidence")
 
     # Self-referential for versioning
-    parent_evidence = relationship("Evidence", remote_side="Evidence.id", foreign_keys=[parent_evidence_id], backref="versions")
+    parent_evidence = relationship(
+        "Evidence", remote_side="Evidence.id", foreign_keys=[parent_evidence_id], backref="versions"
+    )
 
     # Indexes for common queries
     __table_args__ = (

@@ -18,7 +18,7 @@ async def list_entities(
 ):
     """
     List entities for current tenant.
-    
+
     TODO: Implement listing logic with pagination
     """
     return {
@@ -37,7 +37,7 @@ async def get_entity(
 ):
     """
     Get entity by ID.
-    
+
     TODO: Implement get logic with access control
     """
     return {
@@ -53,7 +53,7 @@ async def create_entity(
 ):
     """
     Create a new entity.
-    
+
     TODO: Implement creation logic
     """
     return {
@@ -70,7 +70,7 @@ async def update_entity(
 ):
     """
     Update entity.
-    
+
     TODO: Implement update logic
     """
     return {
@@ -87,11 +87,10 @@ async def delete_entity(
 ):
     """
     Delete entity (soft delete recommended).
-    
+
     TODO: Implement deletion logic
     """
     return {
         "message": f"Delete entity {entity_id} - TODO: Implement",
         "tenant_id": tenant_id,
     }
-
