@@ -1,8 +1,8 @@
 """Initial schema - all tables
 
-Revision ID: e54883c8fdb0
+Revision ID: 5f701fd63a5d
 Revises: 
-Create Date: 2025-12-17 21:40:32.448159
+Create Date: 2025-12-18 09:47:01.028410
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'e54883c8fdb0'
+revision = '5f701fd63a5d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -268,7 +268,7 @@ def upgrade() -> None:
     sa.Column('parent_evidence_id', sa.UUID(), nullable=True),
     sa.Column('approval_status', sa.String(length=50), nullable=False),
     sa.Column('approved_by_user_id', sa.UUID(), nullable=True),
-    sa.Column('approved_at', sa.UUID(), nullable=True),
+    sa.Column('approved_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('approval_remarks', sa.Text(), nullable=True),
     sa.Column('rejection_reason', sa.Text(), nullable=True),
     sa.Column('is_immutable', sa.Boolean(), nullable=False),
