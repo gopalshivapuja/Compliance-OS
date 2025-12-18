@@ -35,9 +35,10 @@ httpx==0.25.1
 # Logging
 structlog==23.2.0
 
-# Testing (for future)
+# Testing
 pytest==7.4.3
 pytest-asyncio==0.21.1
+pytest-cov==4.1.0
 httpx==0.25.1
 
 # Development

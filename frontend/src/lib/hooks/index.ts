@@ -10,4 +10,14 @@ export {
   useOverdueItems,
   useUpcomingItems,
   useCategoryBreakdown,
-} from './useDashboard';
+} from './useDashboard'
+
+// Compliance hooks
+export { useComplianceInstances, useComplianceInstance } from './useCompliance'
+
+// Audit log hooks
+export {
+  useAuditLogs,
+  useResourceAuditTrail,
+  useAuditLog,
+} from './useAuditLogs'

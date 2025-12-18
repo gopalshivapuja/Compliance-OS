@@ -127,7 +127,7 @@ def get_user_roles(
     if not user:
         return []
 
-    return [role.name for role in user.roles]
+    return [role.role_name for role in user.roles]
 
 
 def grant_entity_access(

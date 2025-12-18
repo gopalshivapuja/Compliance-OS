@@ -1,8 +1,18 @@
 /**
  * TypeScript type definitions
- * TODO: Add types based on API responses
+ * Barrel exports for all types
  */
 
+// Export dashboard types
+export * from './dashboard'
+
+// Export compliance types
+export * from './compliance'
+
+// Export audit types
+export * from './audit'
+
+// Legacy types (kept for backwards compatibility)
 export interface Tenant {
   tenant_id: string
   tenant_name: string
