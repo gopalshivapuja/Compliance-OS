@@ -1,7 +1,7 @@
 """
 Evidence model for audit-ready file storage
 """
-from sqlalchemy import Column, String, Text, Boolean, Integer, BigInteger, ForeignKey, Table, Index
+from sqlalchemy import Column, String, Text, Boolean, Integer, BigInteger, ForeignKey, Table, Index, DateTime
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from app.models.base import Base, UUIDMixin, TenantScopedMixin, AuditMixin
@@ -44,7 +44,7 @@ class Evidence(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
     # Approval workflow
     approval_status = Column(String(50), nullable=False, default="Pending", index=True)  # Pending, Approved, Rejected
     approved_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    approved_at = Column(UUID(as_uuid=True), nullable=True)  # Should be DateTime, but keeping consistent
+    approved_at = Column(DateTime(timezone=True), nullable=True)
     approval_remarks = Column(Text, nullable=True)
     rejection_reason = Column(Text, nullable=True)
 
