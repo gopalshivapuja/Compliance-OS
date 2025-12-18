@@ -9,17 +9,13 @@ from uuid import UUID
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_tenant_id, get_current_user
-from app.models.compliance_instance import ComplianceInstance
-from app.models.compliance_master import ComplianceMaster
-from app.models.entity import Entity
-from app.models.user import User
-from app.schemas.compliance_instance import (
+from app.models import ComplianceInstance, ComplianceMaster, Entity, User
+from app.schemas import (
     ComplianceInstanceResponse,
     ComplianceInstanceListResponse,
     ComplianceInstanceUpdate,
 )
-from app.services.entity_access_service import check_entity_access, get_user_accessible_entities
-from app.services.audit_service import log_action
+from app.services import check_entity_access, get_user_accessible_entities, log_action
 
 router = APIRouter()
 

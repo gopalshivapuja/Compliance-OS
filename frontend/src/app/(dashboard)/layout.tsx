@@ -3,7 +3,7 @@
  */
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { ProtectedRoute } from '@/components/auth'
 
 export default function DashboardLayout({
   children,

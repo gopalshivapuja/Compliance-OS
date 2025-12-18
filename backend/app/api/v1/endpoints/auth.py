@@ -14,15 +14,15 @@ from app.core.redis import (
     validate_refresh_token,
     invalidate_refresh_token,
 )
-from app.schemas.auth import (
+from app.schemas import (
     LoginRequest,
     TokenResponse,
     UserResponse,
     RefreshTokenRequest,
     LogoutRequest,
 )
-from app.models.user import User
-from app.services.audit_service import log_action
+from app.models import User
+from app.services import log_action
 
 router = APIRouter()
 

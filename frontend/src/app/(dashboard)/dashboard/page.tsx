@@ -12,7 +12,7 @@ import {
   useDashboardOverview,
   useOverdueItems,
   useUpcomingItems,
-} from '@/hooks/useDashboard'
+} from '@/lib/hooks'
 
 export default function DashboardPage() {
   const { data: overview, isLoading: overviewLoading, error: overviewError } = useDashboardOverview()

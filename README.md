@@ -95,6 +95,41 @@ npm run dev
 
 Frontend will be available at http://localhost:3000
 
+## 🛠️ Utility Scripts
+
+The `scripts/` directory contains helpful utilities for common development tasks:
+
+### Quick Setup
+For first-time contributors, use the automated setup script:
+```bash
+./scripts/setup.sh
+```
+
+This will:
+- Check prerequisites (Python, Node.js, Docker)
+- Set up backend virtual environment and dependencies
+- Install frontend dependencies
+- Create `.env` files from templates
+- Provide next steps guidance
+
+### Health Checks
+Verify all services are running correctly:
+```bash
+./scripts/health-check.sh
+```
+
+Checks:
+- Docker container status (PostgreSQL, Redis, Backend, Celery, Frontend)
+- HTTP endpoint health (Backend API, Frontend)
+- Database and Redis connectivity
+
+**Output Legend:**
+- ✓ Green: Service is healthy
+- ⚠ Yellow: Service is running but may have issues
+- ✗ Red: Service is not running or unreachable
+
+For more scripts and detailed usage, see [scripts/README.md](./scripts/README.md)
+
 ## 📚 Documentation
 
 - **[PRD.md](./PRD.md)**: Product Requirements Document

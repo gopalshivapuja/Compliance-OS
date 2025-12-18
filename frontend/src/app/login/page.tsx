@@ -5,7 +5,6 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Input } from '@/components/ui/Input'
@@ -14,14 +13,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { useToast } from '@/components/ui/Toast'
 import { authApi } from '@/lib/api/endpoints'
 import { useAuthStore } from '@/lib/store/auth-store'
-
-// Validation schema
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-})
-
-type LoginFormData = z.infer<typeof loginSchema>
+import { loginSchema, type LoginFormData } from '@/lib/validators/auth'
 
 export default function LoginPage() {
   const router = useRouter()

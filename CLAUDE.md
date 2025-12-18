@@ -27,6 +27,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Forms**: React Hook Form + Zod validation
 - **HTTP Client**: Axios with interceptors
 
+## Import Patterns
+
+### Backend (Python)
+Always use barrel exports from `__init__.py` for cleaner imports and better maintainability:
+
+```python
+# ✅ Correct (Barrel Exports)
+from app.models import ComplianceInstance, ComplianceMaster, Entity, User
+from app.schemas import ComplianceInstanceResponse, ComplianceInstanceUpdate
+from app.services import check_entity_access, log_action, get_audit_logs
+
+# ❌ Avoid (Direct Imports)
+from app.models.compliance_instance import ComplianceInstance
+from app.models.compliance_master import ComplianceMaster
+from app.services.entity_access_service import check_entity_access
+from app.services.audit_service import log_action
+```
+
+**Benefits**: Reduces coupling, easier refactoring, cleaner code, industry standard (Google/Amazon/Anthropic).
+
+### Frontend (TypeScript)
+Use barrel exports for cleaner imports and better tree-shaking:
+
+```typescript
+// ✅ Correct (Barrel Exports)
+import { Button, Input, Spinner } from '@/components/ui'
+import { useDashboardOverview, useOverdueItems } from '@/lib/hooks'
+import { loginSchema, type LoginFormData } from '@/lib/validators/auth'
+import { formatDate, formatCurrency } from '@/lib/utils'
+
+// Or import from specific modules for better tree-shaking
+import { formatDate } from '@/lib/utils/date'
+import { cn } from '@/lib/utils/format'
+
+// ❌ Avoid (Verbose Imports)
+import { Button } from '@/components/ui/Button'
+import { useDashboardOverview } from '@/hooks/useDashboard'
+```
+
+**Benefits**: Cleaner code, better tree-shaking, easier refactoring, follows Next.js best practices.
+
 ## Common Commands
 
 ### Backend Development
