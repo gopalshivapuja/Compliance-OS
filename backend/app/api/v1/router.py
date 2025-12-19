@@ -1,10 +1,12 @@
 """
 Main API v1 router that includes all endpoint routers
 """
+
 from fastapi import APIRouter
 from app.api.v1.endpoints import (
     auth,
     tenants,
+    users,
     entities,
     compliance_masters,
     compliance_instances,
@@ -19,6 +21,7 @@ api_router = APIRouter()
 # Include all endpoint routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(tenants.router, prefix="/tenants", tags=["Tenants"])
+api_router.include_router(users.router, prefix="/users", tags=["Users"])
 api_router.include_router(entities.router, prefix="/entities", tags=["Entities"])
 api_router.include_router(
     compliance_masters.router, prefix="/compliance-masters", tags=["Compliance Masters"]
