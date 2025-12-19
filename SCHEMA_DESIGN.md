@@ -292,20 +292,154 @@ For flexible fields like `due_date_rule` and `dependencies`:
 
 ---
 
+## 🤖 AI & Integration Tables (V2)
+
+### 8. **Document Embeddings** 🧠
+**Purpose**: Store vector embeddings for RAG-based compliance chatbot
+
+**Key Fields**:
+- `embedding_id`: Primary key (UUID)
+- `tenant_id`: Foreign key to tenants
+- `compliance_code`: Links to compliance master (optional)
+- `chunk_text`: Text chunk from compliance documentation
+- `embedding`: Vector(1536) - Claude embeddings for semantic search
+- `metadata`: JSONB for source, page number, document type
+- `created_at`: Timestamp
+
+**Why pgvector Extension?** PostgreSQL with pgvector eliminates need for separate vector database (Pinecone, Weaviate). Reduces infrastructure complexity and cost.
+
+**Use Case**:
+- User asks chatbot: "When is GST 3B due for March 2025?"
+- Generate query embedding → Vector similarity search → Return top 3 relevant chunks
+- Send chunks + query to Claude 3.5 Haiku → Generate answer
+
+**Index**:
+```sql
+CREATE INDEX idx_embeddings_vector ON document_embeddings
+USING ivfflat (embedding vector_cosine_ops);
+```
+
+---
+
+### 9. **Compliance Predictions** 🔮
+**Purpose**: Store ML model predictions for late filing risk
+
+**Key Fields**:
+- `prediction_id`: Primary key (UUID)
+- `compliance_instance_id`: Foreign key to compliance_instances
+- `predicted_status`: Enum ('on_time', 'at_risk', 'likely_late')
+- `confidence_score`: Decimal(3,2) - 0.00 to 1.00
+- `risk_factors`: JSONB - Features that influenced prediction
+- `predicted_at`: Timestamp
+- `model_version`: String - Track which model version generated prediction
+
+**Why Store Predictions?**
+- Audit trail of AI decisions
+- Track model accuracy over time
+- Enable A/B testing of model versions
+- Historical analysis of prediction performance
+
+**Use Case**:
+- Daily cron job runs XGBoost model on all pending compliance instances
+- Predicts which instances are "at_risk" (7-14 days before due date)
+- CFO dashboard highlights high-risk items early
+- Proactive intervention to prevent late filings
+
+**Risk Factors Example**:
+```json
+{
+  "days_until_due": 5,
+  "owner_completion_rate": 0.72,
+  "pending_dependencies": 2,
+  "evidence_uploaded": false,
+  "previous_delay_days": 3
+}
+```
+
+---
+
+### 10. **API Sync Log** 🔗
+**Purpose**: Track external API integration sync status and errors
+
+**Key Fields**:
+- `sync_log_id`: Primary key (UUID)
+- `tenant_id`: Foreign key to tenants
+- `entity_id`: Foreign key to entities (optional, for entity-specific syncs)
+- `api_provider`: Enum ('GSTN', 'MCA', 'SAP', 'ORACLE')
+- `sync_type`: Enum ('filing_status', 'master_data', 'financial_data')
+- `status`: Enum ('success', 'partial_success', 'failed')
+- `records_synced`: Integer count
+- `error_message`: Text (if failed)
+- `started_at`, `completed_at`: Timestamps
+- `metadata`: JSONB - API-specific details
+
+**Why Sync Log?**
+- Debugging API integration failures
+- Audit trail of external data changes
+- Monitor sync health (SLA compliance)
+- Alerting on repeated failures
+
+**Use Case**:
+- Daily 6 AM IST: Sync GSTN filing status for all GST instances
+- Log each sync attempt with success/failure
+- If sync fails 3 times consecutively → Alert admin
+- Compliance instances show "Last synced: 2 hours ago" badge
+
+**Metadata Example (GSTN)**:
+```json
+{
+  "gstin": "29AABCU9603R1ZV",
+  "return_period": "032024",
+  "filing_date": "2024-04-18",
+  "acknowledgment_number": "AB2904240012345",
+  "api_response_time_ms": 1250
+}
+```
+
+**Index Strategy**:
+```sql
+CREATE INDEX idx_sync_log_provider_status ON api_sync_log (api_provider, status, started_at DESC);
+CREATE INDEX idx_sync_log_tenant_entity ON api_sync_log (tenant_id, entity_id, started_at DESC);
+```
+
+---
+
+### 11. **Tenant Branding (Enhanced)** 🎨
+**Purpose**: Support white-label customization per tenant
+
+**Additional Fields in `tenants` table**:
+- `logo_url`: S3 path to uploaded logo (optional)
+- `primary_color`: Hex color code (e.g., "#1E40AF") for UI theming
+- `secondary_color`: Hex color for buttons, highlights
+- `company_website`: URL for footer links
+- `support_email`: Custom support email (instead of generic support@complianceos.com)
+
+**Why in `tenants` table?** Branding is tenant-level configuration, so adding columns to existing table is simpler than new table.
+
+**Use Case**:
+- Tenant uploads logo → Store in S3 → Save `logo_url` in tenants table
+- Frontend reads `primary_color` → Applies to dashboard theme
+- Emails use `support_email` for reply-to address
+- White-label experience for enterprise customers
+
+---
+
 ## 🔮 Future Enhancements
 
-### V2 Considerations:
+### V3 Considerations:
 1. **Partitioning**: Partition `audit_logs` by `created_at` (monthly partitions) for better performance
 2. **Materialized Views**: Pre-compute dashboard aggregations
 3. **Full-Text Search**: Add `tsvector` columns for advanced search
 4. **Soft Deletes**: Add `deleted_at` columns instead of hard deletes
 5. **Event Sourcing**: Consider event store for compliance state changes
+6. **Time-Series Database**: Move predictions and sync logs to TimescaleDB for better time-series query performance
 
 ---
 
 ## 📋 Checklist for Implementation
 
-- [x] All core tables defined
+### V1 Core Tables ✅
+- [x] All core tables defined (11 tables)
 - [x] Primary keys on all tables
 - [x] Foreign keys for referential integrity
 - [x] Indexes for performance
@@ -317,11 +451,23 @@ For flexible fields like `due_date_rule` and `dependencies`:
 - [x] Triggers for `updated_at` automation
 - [x] Documentation
 
+### V2 AI & Integration Tables 🚧
+- [ ] `document_embeddings` table (RAG chatbot)
+- [ ] `compliance_predictions` table (ML risk scoring)
+- [ ] `api_sync_log` table (external API sync tracking)
+- [ ] Tenant branding columns in `tenants` table
+- [ ] pgvector extension enabled
+- [ ] Vector indexes for embeddings
+- [ ] Migrations for new tables
+- [ ] Seed data for testing AI features
+
 ---
 
 ## 🎉 Summary
 
 This schema provides:
+
+### V1 Core Features ✅
 - ✅ **Normalized structure** (3NF) for data integrity
 - ✅ **Multi-tenant isolation** for security
 - ✅ **Performance optimization** via indexes and denormalization
@@ -329,10 +475,15 @@ This schema provides:
 - ✅ **Flexibility** via JSONB for varying compliance rules
 - ✅ **Scalability** via UUIDs and proper indexing
 
-The design balances normalization (data integrity) with denormalization (performance), ensuring Compliance OS can handle GCC operations efficiently while maintaining audit-ready data structures.
+### V2 AI & Integration Enhancements 🚧
+- 🆕 **Vector search** with pgvector for RAG-based chatbot (no separate vector DB needed)
+- 🆕 **ML predictions** stored for audit trail and accuracy tracking
+- 🆕 **API sync logs** for external integration monitoring and debugging
+- 🆕 **Tenant branding** for white-label customization
+- 🆕 **Time-series optimizations** for sync logs and predictions
+
+The design balances normalization (data integrity) with denormalization (performance), ensuring Compliance OS can handle GCC operations efficiently while maintaining audit-ready data structures. The V2 tables are architected for future AI features without disrupting the stable V1 core.
 
 ---
 
 **Remember**: "If it cannot stand up to an auditor, it does not ship." This schema is designed with that principle in mind! 🎯
-
-

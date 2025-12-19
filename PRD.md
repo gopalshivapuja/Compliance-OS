@@ -724,9 +724,11 @@ Every feature is designed with audit readiness as the primary requirement.
 
 **Response Time**:
 - API endpoints: <500ms (p95)
-- Dashboard load: <2 seconds
+- Dashboard load: <2 seconds for 10,000 compliance instances
 - Evidence download: <5 seconds for 50 MB file
 - Search/filter: <1 second for 10K records
+- **NEW (V2)**: AI prediction inference: <3 seconds per instance
+- **NEW (V2)**: Chatbot response: <5 seconds including RAG retrieval
 
 **Throughput**:
 - Support 1,000 concurrent users
@@ -737,6 +739,8 @@ Every feature is designed with audit readiness as the primary requirement.
 - Horizontal scaling for backend (stateless FastAPI)
 - Database read replicas for reporting
 - CDN for frontend assets
+- **NEW (V2)**: Support 5-50 tenants in V1, scale to 100 tenants in V2
+- **NEW (V2)**: AI API quota: 100K tokens/day per tenant
 
 ---
 
@@ -758,31 +762,48 @@ Every feature is designed with audit readiness as the primary requirement.
 - Encryption in transit (TLS 1.3)
 - No PII in logs
 - Regular security audits and penetration testing
+- **NEW (V2)**: AI data processing - Zero retention policy with Anthropic (no customer data stored in LLM provider logs)
 
 **Compliance**:
 - SOC 2 Type II certification (target: Year 2)
 - GDPR compliance (for EU parent companies)
-- India data residency: All data stored in Mumbai region (ap-south-1)
+- India data residency: All data stored in Mumbai region (ap-south-1) for V1
+- **UPDATED**: Multi-region deployment (Singapore primary, US-East backup) - data residency configurable per tenant
 
 ---
 
 ### 3. Availability & Reliability
 
 **Uptime**:
-- 99.9% uptime SLA (8.76 hours downtime per year)
-- Scheduled maintenance windows: Saturday 2-4 AM IST
+- **UPDATED**: 99.99% uptime SLA (52 minutes downtime per year)
+- **NEW**: Multi-region active-passive deployment (Singapore + US-East)
+- Zero-downtime deployments with rolling updates
+- Scheduled maintenance windows: Saturday 2-4 AM IST (if needed)
 
 **Disaster Recovery**:
-- Database backups: Hourly incremental, daily full backup
+- **NEW**: Multi-region failover strategy
+- Database backups: Continuous WAL archiving, daily full backup
 - Point-in-time recovery: Up to 30 days
-- RTO (Recovery Time Objective): 4 hours
-- RPO (Recovery Point Objective): 1 hour
+- **UPDATED**: RTO (Recovery Time Objective): 1 hour (manual failover)
+- **UPDATED**: RPO (Recovery Point Objective): 5 minutes (continuous replication)
+- Backup retention: 7 days (point-in-time), 30 days (daily), 7 years (monthly for compliance)
+- **NEW**: Automated restore testing: Weekly automated restore to staging environment
+
+**Infrastructure**:
+- **Primary Region**: Singapore (closest to India, 50-80ms latency)
+- **Backup Region**: US-East (failover in case of primary region failure)
+- **Database**: PostgreSQL with async replication to backup region
+- **Storage**: S3 multi-region replication for evidence files
 
 **Monitoring**:
-- Application monitoring: Sentry for error tracking
-- Infrastructure monitoring: AWS CloudWatch
-- Uptime monitoring: Third-party service (UptimeRobot)
-- Alerting: PagerDuty for critical incidents
+- Application monitoring: Sentry for error tracking (free tier: 5K errors/month)
+- Uptime monitoring: UptimeRobot (health checks every 1 minute)
+- Infrastructure monitoring: Render built-in metrics (CPU, memory, latency)
+- Alerting: Slack webhooks for critical incidents
+- **Alert Triggers**:
+  - API error rate >5% for 5 minutes → Immediate alert
+  - Database down → Immediate Slack + email
+  - Disk >80% full → Warning alert
 
 ---
 
@@ -893,19 +914,235 @@ Every feature is designed with audit readiness as the primary requirement.
 
 ## Future Roadmap
 
-### V2 (6-9 months post-V1 launch)
+### V2 (Month 6-12 post-V1 launch)
 
-**Theme**: Integration & Automation
+**Theme**: AI-Powered Automation & Intelligence
 
-**Key Features**:
-1. **Portal Integrations**: Auto-file GST 3B, TDS returns directly from Compliance OS
-2. **ERP Connectors**: Pull accounting data from SAP, Oracle for auto-population
-3. **Custom Compliance**: Tenant admins can define their own compliance templates
-4. **Advanced Workflow**: Drag-drop workflow builder with conditional logic
-5. **Mobile App**: iOS and Android apps for task completion on-the-go
-6. **SSO & MFA**: Enterprise authentication with Okta, Azure AD
+---
 
-**Target Customers**: Large GCCs (1000+ employees) with complex requirements
+#### AI-Powered Features
+
+##### 1. OCR + LLM Data Extraction
+
+**Problem**: Tax leads spend 2-3 hours per month manually entering data from PDF forms
+
+**Solution**: Upload GST return PDF → AI auto-extracts tax amounts, filing dates, GSTIN
+
+**Technology**: Anthropic Claude 3.5 Sonnet with vision API
+
+**Success Metric**: 80% reduction in manual data entry time
+
+**User Workflow**:
+1. Tax lead uploads GST return PDF in compliance instance
+2. AI extracts: GSTIN, tax period, tax payable, filing date, turnover
+3. Fields auto-populate in compliance form
+4. User reviews and confirms extracted data
+5. Submit for approval
+
+**Cost**: ~₹1.50 per document extraction (5-10 pages)
+
+---
+
+##### 2. Predictive Compliance Analytics
+
+**Problem**: No early warning system for potential late filings
+
+**Solution**: ML model predicts which compliance instances are at risk 7-14 days before due date
+
+**Technology**: XGBoost classification model trained on historical filing patterns
+
+**Success Metric**: 90% accuracy in predicting late filings (Amber status early warnings)
+
+**Features** (10 predictive signals):
+- Days until due date
+- Historical on-time rate for this compliance type
+- Number of pending dependencies
+- Assigned user's historical completion rate
+- Tenant size (number of entities)
+- Compliance category (GST/Tax/Payroll)
+- Evidence upload count (proxy for preparation status)
+- Previous instance filing delay
+- Current workload of assigned user
+- Day of week effect
+
+**User Experience**:
+- Dashboard shows "AI Risk Score" badge
+- High-risk items flagged 7 days in advance
+- CFO receives weekly "At-Risk Compliance" report
+
+---
+
+##### 3. AI Compliance Chatbot
+
+**Problem**: Tax leads waste time searching for compliance details ("When is TDS due?")
+
+**Solution**: Natural language chatbot answers compliance queries instantly
+
+**Technology**: Claude 3.5 Haiku with RAG (Retrieval Augmented Generation)
+
+**Success Metric**: <5 second response time, 95% answer accuracy
+
+**Sample Queries**:
+- "When is GST 3B due for March 2025?" → "20th April 2025"
+- "What documents do I need for TDS filing?" → Lists required evidence
+- "Who is responsible for FEMA compliance for IND-BLR?" → Shows assigned user
+
+**Data Sources**:
+- Compliance masters database (22 templates)
+- User-uploaded documentation
+- Government circulars (manually curated)
+- Internal help center articles
+
+**Implementation**: Chatbot widget in bottom-right corner of every page
+
+---
+
+##### 4. Smart Document Categorization
+
+**Problem**: Uploaded evidence needs manual tagging
+
+**Solution**: AI auto-categorizes documents (Invoice, Form 16, Bank Statement, etc.)
+
+**Technology**: Claude 3.5 Haiku for image + text classification
+
+**Success Metric**: 85% categorization accuracy
+
+**Categories** (15 types):
+- Invoice
+- Form 16 (TDS certificate)
+- Bank Statement
+- Challan (tax payment receipt)
+- GST Return
+- Salary Register
+- Board Resolution
+- Power of Attorney
+- Audit Report
+- Other
+
+**User Experience**:
+- Upload file → AI suggests category
+- User can override if incorrect
+- Evidence vault has smart filters by category
+
+---
+
+#### External API Integrations
+
+##### 1. GST Portal (GSTN) Integration
+
+**Problem**: Manual status checking on GSTN portal
+
+**Solution**: Auto-fetch GST filing status and sync to Compliance OS
+
+**API**: GSTN API (government portal integration)
+
+**Impact**: Eliminates manual status updates (saves 3-4 hours/month per entity)
+
+**Workflow**:
+1. Daily cron job at 6 AM IST syncs filing status for all GST instances
+2. If return filed on GSTN but not marked in Compliance OS → Auto-update status to "Completed"
+3. Fetch filing date, acknowledgment number, tax paid amount
+4. Notify tax lead of any discrepancies
+
+**Data Synced**:
+- GSTR-3B filing status
+- GSTR-1 filing status
+- Cash ledger balance
+- ITC (Input Tax Credit) balance
+
+---
+
+##### 2. MCA API Integration
+
+**Problem**: Company master data becomes outdated
+
+**Solution**: Auto-sync company details, director changes, annual filing deadlines
+
+**API**: MCA V3 API (Ministry of Corporate Affairs)
+
+**Impact**: Always up-to-date compliance requirements
+
+**Data Synced** (weekly):
+- Company registration details
+- Director list and changes
+- Upcoming annual filing deadlines (AOC-4, MGT-7)
+- Authorized capital changes
+
+---
+
+##### 3. ERP Connectors
+
+**Problem**: Manual FP&A data entry from SAP/Oracle
+
+**Solution**: Auto-pull P&L, balance sheet for FP&A compliance
+
+**Supported ERPs**:
+- SAP S/4HANA (OData API)
+- Oracle Financials (REST API)
+- NetSuite (SuiteTalk SOAP API)
+
+**Impact**: 90% reduction in FP&A data entry
+
+**Data Synced** (monthly):
+- P&L statement
+- Balance sheet
+- Cash flow statement
+- Budget vs actual variance
+
+---
+
+#### Data Import & Migration Features
+
+**New for V1** (elevated from V2 based on customer needs):
+
+##### Bulk Import Templates (Excel/CSV)
+
+1. **Compliance Master Import**: Upload 50+ custom compliance templates
+2. **Compliance Instance Import**: Import 3 years of historical filing data
+3. **Entity Import**: Bulk setup of 20+ legal entities
+4. **User Bulk Import**: Onboard 50 users at once
+
+**User Workflow**:
+1. Download Excel template from admin panel
+2. Fill in data (one row per record)
+3. Upload via "Bulk Import" page
+4. Preview validation results
+5. Fix errors, confirm import
+6. Backend creates records in bulk
+
+**Validation**:
+- Required field checks
+- Date format validation
+- Entity/user existence verification
+- Duplicate detection
+
+---
+
+#### Enhanced Security Features
+
+##### SSO & MFA (Enhanced from original V2)
+
+**Single Sign-On**:
+- Okta integration
+- Azure AD integration
+- SAML 2.0 support
+
+**Multi-Factor Authentication**:
+- TOTP (Time-based One-Time Password) via Google Authenticator
+- SMS-based OTP (backup method)
+- Enforced for Admin and CFO roles
+
+---
+
+**Target Customers**:
+- V2 AI features: All customers (included in standard pricing)
+- ERP integrations: Large GCCs (1000+ employees) with advanced needs
+- Custom pricing for enterprise API integrations
+
+**Pricing Model**:
+- AI features: Included (up to 100K tokens/month per tenant)
+- Additional AI usage: ₹100 per 1M tokens
+- ERP connectors: ₹50,000/year per connector
 
 ---
 

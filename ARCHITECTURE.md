@@ -16,80 +16,86 @@ graph TB
     end
 
     subgraph "API Gateway & Load Balancer"
-        LB[Load Balancer<br/>NGINX/Cloudflare]
+        LB[Load Balancer<br/>Multi-Region]
         API_GW[API Gateway<br/>Rate Limiting<br/>SSL Termination]
     end
 
     subgraph "Application Layer"
-        API[API Server<br/>Node.js/Express<br/>or Python/FastAPI]
+        API[API Server<br/>FastAPI<br/>Modular Monolith]
         AUTH[Auth Service<br/>JWT + RBAC]
-        WORKFLOW[Workflow Engine<br/>Task Management<br/>Escalation Rules]
-        NOTIFY[Notification Service<br/>Email/Slack<br/>Reminders]
+        WORKFLOW[Workflow Engine<br/>Task Management]
+        NOTIFY[Notification Service]
     end
 
     subgraph "Business Logic Layer"
-        COMPLIANCE[Compliance Engine<br/>Instance Generation<br/>Status Calculation<br/>RAG Scoring]
-        EVIDENCE[Evidence Service<br/>File Upload<br/>Versioning<br/>Approval Workflow]
-        AUDIT[Audit Service<br/>Logging<br/>Traceability]
+        COMPLIANCE[Compliance Engine<br/>Instance Generation<br/>RAG Scoring]
+        EVIDENCE[Evidence Service<br/>File Upload<br/>Approval Workflow]
+        AUDIT[Audit Service<br/>Immutable Logging]
+    end
+
+    subgraph "🆕 AI Service Layer V2"
+        AI_OCR[OCR Extractor<br/>Claude Vision API]
+        AI_PREDICT[Prediction Engine<br/>XGBoost ML]
+        AI_CHAT[Compliance Chatbot<br/>RAG with pgvector]
+        AI_CAT[Document Categorization<br/>Claude Haiku]
+    end
+
+    subgraph "🆕 External Integrations V2"
+        GSTN[GSTN Adapter<br/>GST Portal API]
+        MCA[MCA Adapter<br/>Company Data]
+        ERP[ERP Adapter<br/>SAP/Oracle]
     end
 
     subgraph "Data Layer"
-        DB[(PostgreSQL<br/>Primary Database<br/>Multi-tenant)]
-        REDIS[(Redis<br/>Cache<br/>Session Store)]
-        SEARCH[(Elasticsearch<br/>Full-text Search<br/>Optional)]
+        DB[(PostgreSQL<br/>Multi-tenant<br/>+ pgvector)]
+        DB_REPLICA[(Postgres Replica<br/>US-East Backup)]
+        REDIS[(Redis<br/>Cache + Queue)]
+        REDIS_REPLICA[(Redis Replica<br/>US-East)]
     end
 
     subgraph "Storage Layer"
-        S3[S3/Object Storage<br/>Evidence Files<br/>PDFs, Images]
+        S3[S3 Multi-Region<br/>Evidence Files]
         CDN[CDN<br/>File Delivery]
     end
 
     subgraph "Background Jobs"
-        WORKER[Worker Queue<br/>Bull/BullMQ<br/>or Celery]
-        SCHEDULER[Cron Scheduler<br/>Instance Generation<br/>Status Updates]
-        REMINDER[Reminder Engine<br/>T-3, Due Date,<br/>+3 Overdue]
+        WORKER[Celery Worker<br/>Async Tasks]
+        SCHEDULER[Celery Beat<br/>Cron Jobs]
+        REMINDER[Reminder Engine]
     end
 
-    subgraph "External Integrations"
-        EMAIL[Email Service<br/>SendGrid/SES]
-        SLACK[Slack API<br/>Notifications]
-        ERP[ERP Systems<br/>Future Integration]
+    subgraph "🆕 CI/CD Pipeline"
+        GH_ACTIONS[GitHub Actions<br/>Auto-Test + Deploy]
+        STAGING[Staging Environment<br/>UAT]
     end
 
-    subgraph "Monitoring & Observability"
-        LOGS[Log Aggregation<br/>Winston/Pino →<br/>CloudWatch/Datadog]
-        METRICS[Metrics<br/>Prometheus/Grafana]
-        ALERTS[Alerting<br/>PagerDuty/Opsgenie]
+    subgraph "Monitoring"
+        SENTRY[Sentry<br/>Error Tracking]
+        UPTIME[UptimeRobot<br/>Health Checks]
+        RENDER_METRICS[Render Metrics<br/>CPU/Memory/Latency]
     end
 
     WEB --> LB
-    MOBILE --> LB
     LB --> API_GW
     API_GW --> API
     API --> AUTH
-    API --> WORKFLOW
     API --> COMPLIANCE
     API --> EVIDENCE
-    API --> AUDIT
-    API --> DB
-    API --> REDIS
-    AUTH --> DB
-    WORKFLOW --> DB
+    API --> AI_OCR
+    API --> AI_PREDICT
+    API --> AI_CHAT
+    API --> GSTN
+    API --> MCA
     COMPLIANCE --> DB
     EVIDENCE --> S3
-    EVIDENCE --> DB
-    AUDIT --> DB
-    WORKER --> DB
-    WORKER --> NOTIFY
-    SCHEDULER --> COMPLIANCE
-    REMINDER --> NOTIFY
-    NOTIFY --> EMAIL
-    NOTIFY --> SLACK
-    API --> SEARCH
-    S3 --> CDN
-    API --> LOGS
-    WORKER --> LOGS
-    API --> METRICS
+    AI_CHAT --> DB
+    DB -.->|Async Replication| DB_REPLICA
+    REDIS -.->|Sync| REDIS_REPLICA
+    S3 -.->|Cross-Region| S3
+    WORKER --> AI_PREDICT
+    GH_ACTIONS --> STAGING
+    STAGING --> API
+    SENTRY --> API
 ```
 
 ---
@@ -176,7 +182,7 @@ graph TB
 - **Task Creation**: Generate tasks from compliance instances
 - **Assignment Logic**: Assign to users or roles
 - **Status Transitions**: Enforce workflow rules (Pending → In Progress → Completed)
-- **Escalation Rules**: 
+- **Escalation Rules**:
   - T-3 days → Notify owner
   - Due date → Notify approver
   - +3 days overdue → Escalate to CFO
@@ -194,7 +200,7 @@ Compliance Instance Created
 
 #### **Notification Service**
 **Responsibility**: Multi-channel notifications
-- **Email Notifications**: 
+- **Email Notifications**:
   - Daily digest of overdue items
   - Task assignments
   - Approval requests
@@ -213,7 +219,7 @@ Compliance Instance Created
 
 #### **Compliance Engine**
 **Responsibility**: Core compliance logic
-- **Instance Generation**: 
+- **Instance Generation**:
   - Cron job runs monthly/quarterly
   - Reads `compliance_masters` with frequency rules
   - Generates `compliance_instances` for each applicable entity
@@ -376,7 +382,7 @@ s3://compliance-os-evidence/
 - **Daily**: Update overdue status
 - **Weekly**: Generate compliance calendar for next week
 
-**Implementation**: 
+**Implementation**:
 - Node.js: `node-cron` or external scheduler (AWS EventBridge)
 - Python: Celery Beat
 
@@ -465,6 +471,220 @@ instances.forEach(instance => {
 - High error rates (>5% of requests)
 - Disk space warnings
 - S3 upload failures
+
+---
+
+## 🤖 AI Service Layer (V2)
+
+### AI Service Module Architecture
+
+```
+backend/app/services/ai_service/
+  ├── __init__.py
+  ├── ocr_extractor.py       # PDF → structured data extraction
+  ├── prediction_engine.py   # Late filing prediction ML model
+  ├── chatbot_service.py     # RAG-based compliance Q&A
+  ├── categorization.py      # Document auto-categorization
+  └── embedding_service.py   # Vector embeddings for RAG
+```
+
+### OCR + LLM Data Extraction Service
+
+**Responsibility**: Extract structured data from PDF compliance forms
+
+**Flow**:
+1. User uploads GST return PDF
+2. Convert PDF to images (if multi-page)
+3. Send to Claude 3.5 Sonnet vision API with extraction prompt
+4. Parse JSON response into structured fields
+5. Pre-fill compliance instance form
+
+**Example Prompt**:
+```python
+prompt = f"""
+Extract the following data from this GST return PDF:
+- GSTIN
+- Tax Period (MM/YYYY)
+- Total Tax Payable (amount)
+- Filing Date
+- Taxable Turnover
+
+Return as JSON with keys: gstin, tax_period, tax_payable, filing_date, turnover
+"""
+```
+
+**Cost**: ~$0.02 per document (assuming 5-10 pages)
+
+---
+
+### Prediction Engine Service
+
+**Responsibility**: Predict late filings using historical patterns
+
+**ML Model**:
+- **Algorithm**: XGBoost Classifier
+- **Features** (10 features):
+  - Days until due date
+  - Historical on-time rate for this compliance type
+  - Number of pending dependencies
+  - Assigned user's historical completion rate
+  - Tenant size (number of entities)
+  - Compliance category (GST/Tax/Payroll)
+  - Evidence upload count (proxy for preparation status)
+  - Previous instance filing delay (days)
+  - Current workload of assigned user
+  - Day of week (Mon/Fri effect)
+- **Target**: Binary classification (on_time vs at_risk)
+- **Training**: Retrain monthly with new data
+
+**Integration**:
+- Runs daily via Celery cron job
+- Updates `compliance_predictions` table
+- If confidence_score > 0.75 → Set status to "At Risk" (Amber)
+
+---
+
+### Chatbot Service (RAG)
+
+**Responsibility**: Answer compliance queries using natural language
+
+**Architecture**:
+```
+User Query: "When is GST 3B due for March 2025?"
+      ↓
+1. Generate query embedding (Claude embeddings API)
+      ↓
+2. Vector search in document_embeddings table (pgvector)
+      ↓
+3. Retrieve top 3 relevant chunks
+      ↓
+4. Send to Claude 3.5 Haiku with context
+      ↓
+5. Return answer + link to compliance master
+```
+
+**Data Sources for RAG**:
+- Compliance masters (22 templates)
+- User-uploaded documentation
+- Government circulars (manually curated)
+- Internal wiki/FAQs
+
+**Embedding Storage**:
+- Use `pgvector` extension in PostgreSQL
+- 1536-dimensional embeddings (Claude default)
+- Cosine similarity search
+
+---
+
+### Document Categorization Service
+
+**Responsibility**: Auto-tag uploaded evidence
+
+**Categories** (15 common types):
+- Invoice
+- Form 16 (TDS certificate)
+- Bank Statement
+- Challan (tax payment receipt)
+- GST Return
+- Salary Register
+- Board Resolution
+- Power of Attorney
+- Audit Report
+- Other
+
+**Flow**:
+1. Extract first page of uploaded document
+2. Send to Claude 3.5 Haiku with categorization prompt
+3. Store category in `evidence.document_category` field
+4. Use for smart filtering in Evidence Vault
+
+**Cost**: ~$0.001 per document (Haiku is very cheap)
+
+---
+
+## 🔗 External Integrations Layer (V2)
+
+### Adapter Pattern Architecture
+
+```python
+# backend/app/services/external_integrations/base_adapter.py
+from abc import ABC, abstractmethod
+
+class ExternalAPIAdapter(ABC):
+    """Base class for all external API integrations"""
+
+    @abstractmethod
+    async def authenticate(self) -> bool:
+        """Authenticate with external service"""
+        pass
+
+    @abstractmethod
+    async def fetch_filing_status(self, compliance_code: str, period: str):
+        """Fetch filing status from external system"""
+        pass
+
+    @abstractmethod
+    async def sync_master_data(self, entity_id: str):
+        """Sync entity master data"""
+        pass
+```
+
+### GSTN Adapter (V2)
+
+**Responsibility**: Integrate with GST Network portal
+
+**API Endpoints Used**:
+- `/returns/gstr3b/status` - Check if return is filed
+- `/returns/gstr1/status` - Get GSTR-1 filing status
+- `/ledgers/cash` - Fetch cash ledger balance
+
+**Authentication**: OAuth 2.0 with API key (requires GSTN approval)
+
+**Sync Frequency**: Daily at 6 AM IST
+
+**Implementation**:
+```python
+class GSTNAdapter(ExternalAPIAdapter):
+    async def fetch_filing_status(self, gstin: str, period: str):
+        # V1: Return None (stub)
+        # V2: Implement actual API call
+        response = await httpx.get(
+            f"{GSTN_API_URL}/returns/gstr3b/status",
+            params={"gstin": gstin, "ret_period": period},
+            headers={"Authorization": f"Bearer {self.access_token}"}
+        )
+        return response.json()
+```
+
+---
+
+### MCA Adapter (V2)
+
+**Responsibility**: Sync company master data from Ministry of Corporate Affairs
+
+**API Endpoints**:
+- `/company/{cin}` - Fetch company details
+- `/directors/{cin}` - Get director list
+- `/filings/{cin}` - Upcoming annual filings
+
+**Sync Frequency**: Weekly
+
+---
+
+### ERP Adapter (V2)
+
+**Responsibility**: Pull financial data for FP&A compliance
+
+**Supported Systems**:
+- SAP S/4HANA (OData API)
+- Oracle Financials (REST API)
+- NetSuite (SuiteTalk SOAP API)
+
+**Data Synced**:
+- P&L statement (monthly)
+- Balance sheet (monthly)
+- Cash flow (monthly)
+- Budget vs actual (monthly)
 
 ---
 
@@ -626,4 +846,3 @@ instances.forEach(instance => {
 ---
 
 **Remember**: "If it cannot stand up to an auditor, it does not ship." This architecture ensures audit-readiness at every layer! 🎯
-

@@ -1668,29 +1668,769 @@ Include screenshots for key flows.
 
 ---
 
+## Phase 13: AI Service Layer Implementation (V2)
+
+**Status**: Future - Post-V1 launch (Month 6-9)
+**Purpose**: Build AI-powered features for automation and intelligence
+
+### 13.1 AI Service Module Setup
+**Directory**: `backend/app/services/ai_service/`
+
+Files to create:
+- `__init__.py` - Module initialization and exports
+- `ocr_extractor.py` - PDF → structured data extraction
+- `prediction_engine.py` - Late filing risk prediction
+- `chatbot_service.py` - RAG-based Q&A chatbot
+- `categorization.py` - Document auto-categorization
+- `embedding_service.py` - Vector embeddings for RAG
+
+### 13.2 OCR + LLM Data Extraction
+**File**: `backend/app/services/ai_service/ocr_extractor.py`
+
+Functions:
+```python
+async def extract_gst_return_data(pdf_file: UploadFile) -> dict:
+    """
+    Extract structured data from GST return PDF using Claude Vision API
+
+    Returns: {
+        'gstin': '29AABCU9603R1ZV',
+        'tax_period': '032024',
+        'tax_payable': 125000.00,
+        'filing_date': '2024-04-18',
+        'taxable_turnover': 5000000.00
+    }
+    """
+```
+
+**Integration**:
+- API endpoint: `POST /api/v1/ai/extract-gst-data`
+- Upload PDF → Call Claude Vision API → Parse JSON response
+- Pre-fill compliance instance form with extracted data
+- Cost: ~₹1.50 per document (5-10 pages)
+
+### 13.3 Predictive Analytics Engine
+**File**: `backend/app/services/ai_service/prediction_engine.py`
+
+Functions:
+```python
+def train_late_filing_model(historical_data: pd.DataFrame):
+    """
+    Train XGBoost model on historical compliance data
+
+    Features: days_until_due, owner_completion_rate, pending_dependencies,
+              evidence_uploaded, previous_delay, current_workload, etc.
+    Target: Binary (on_time vs at_risk)
+    """
+
+async def predict_instance_risk(instance_id: UUID) -> dict:
+    """
+    Predict late filing risk for compliance instance
+
+    Returns: {
+        'predicted_status': 'at_risk',
+        'confidence_score': 0.87,
+        'risk_factors': {...}
+    }
+    """
+```
+
+**Celery Task**:
+```python
+@celery_app.task
+def predict_all_instances_daily():
+    """Run daily to predict risk for all pending instances"""
+```
+
+**Dashboard Integration**:
+- Show "AI Risk Score" badge on instances
+- CFO dashboard highlights high-risk items
+- Weekly "At-Risk Compliance" email report
+
+### 13.4 RAG-Based Compliance Chatbot
+**File**: `backend/app/services/ai_service/chatbot_service.py`
+
+Functions:
+```python
+async def answer_compliance_query(query: str, tenant_id: UUID) -> dict:
+    """
+    Answer compliance questions using RAG
+
+    Steps:
+    1. Generate query embedding (Claude embeddings API)
+    2. Vector search in document_embeddings table (pgvector)
+    3. Retrieve top 3 relevant chunks
+    4. Send to Claude 3.5 Haiku with context
+    5. Return answer + sources
+    """
+```
+
+**Embedding Generation**:
+```python
+async def generate_embeddings_for_documentation():
+    """
+    One-time setup: Create embeddings for all compliance documentation
+    - Compliance masters
+    - User-uploaded docs
+    - Government circulars
+    - Help articles
+
+    Store in document_embeddings table
+    """
+```
+
+**API Endpoint**: `POST /api/v1/ai/chat`
+
+**Frontend Widget**: Bottom-right chatbot bubble
+
+### 13.5 Document Auto-Categorization
+**File**: `backend/app/services/ai_service/categorization.py`
+
+Functions:
+```python
+async def categorize_uploaded_evidence(file_path: str) -> str:
+    """
+    Classify document into one of 15 categories using Claude Haiku
+
+    Categories: Invoice, Form 16, Bank Statement, Challan,
+                GST Return, Salary Register, etc.
+
+    Returns: category name
+    Cost: ~₹0.001 per document (very cheap with Haiku)
+    """
+```
+
+**Integration**:
+- Auto-categorize on evidence upload
+- Store in `evidence.document_category` field
+- Enable smart filtering in Evidence Vault
+
+### 13.6 Database Migrations for AI Tables
+**Alembic Migration**: `backend/alembic/versions/xxx_add_ai_tables.py`
+
+Tables to create:
+1. `document_embeddings` - Vector search for RAG
+2. `compliance_predictions` - ML model predictions
+3. Enable pgvector extension
+
+```sql
+-- Enable pgvector
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Document embeddings table
+CREATE TABLE document_embeddings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID REFERENCES tenants(id),
+    compliance_code VARCHAR(50),
+    chunk_text TEXT NOT NULL,
+    embedding VECTOR(1536),
+    metadata JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_embeddings_vector
+ON document_embeddings USING ivfflat (embedding vector_cosine_ops);
+
+-- Compliance predictions table
+CREATE TABLE compliance_predictions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    compliance_instance_id UUID REFERENCES compliance_instances(id),
+    predicted_status VARCHAR(20),
+    confidence_score DECIMAL(3,2),
+    risk_factors JSONB,
+    model_version VARCHAR(50),
+    predicted_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+**Deliverables**:
+- ✅ AI service module structure created
+- ✅ OCR extraction endpoint working (Claude Vision API)
+- ✅ ML prediction model trained and deployed
+- ✅ RAG chatbot answering queries
+- ✅ Document auto-categorization active
+- ✅ pgvector enabled and embeddings stored
+- ✅ Dashboard shows AI predictions
+
+---
+
+## Phase 14: External API Integrations (V2)
+
+**Status**: Future - Post-V1 launch (Month 9-12)
+**Purpose**: Sync data with government portals and ERP systems
+
+### 14.1 Adapter Pattern Implementation
+**Directory**: `backend/app/services/external_integrations/`
+
+Files to create:
+- `__init__.py`
+- `base_adapter.py` - Abstract base class
+- `gstn_adapter.py` - GSTN (GST Portal) integration
+- `mca_adapter.py` - MCA (Company data) integration
+- `erp_adapter.py` - ERP connectors (SAP/Oracle)
+- `mock_adapters.py` - Mock implementations for testing
+
+**Base Adapter**:
+```python
+# base_adapter.py
+from abc import ABC, abstractmethod
+
+class ExternalAPIAdapter(ABC):
+    @abstractmethod
+    async def authenticate(self) -> bool:
+        """Authenticate with external service"""
+        pass
+
+    @abstractmethod
+    async def fetch_filing_status(self, compliance_code: str, period: str):
+        """Fetch filing status from external system"""
+        pass
+
+    @abstractmethod
+    async def sync_master_data(self, entity_id: str):
+        """Sync entity master data"""
+        pass
+```
+
+### 14.2 GSTN (GST Portal) Integration
+**File**: `backend/app/services/external_integrations/gstn_adapter.py`
+
+Functions:
+```python
+class GSTNAdapter(ExternalAPIAdapter):
+    async def fetch_gstr3b_status(self, gstin: str, period: str):
+        """
+        Fetch GSTR-3B filing status from GSTN API
+
+        Returns: {
+            'status': 'Filed',
+            'filing_date': '2024-04-18',
+            'acknowledgment_number': 'AB2904240012345',
+            'tax_paid': 125000.00
+        }
+        """
+
+    async def fetch_cash_ledger_balance(self, gstin: str):
+        """Fetch current cash ledger balance"""
+```
+
+**Celery Task**:
+```python
+@celery_app.task
+def sync_gstn_filing_status_daily():
+    """
+    Runs daily at 6 AM IST
+    - Fetch filing status for all GST instances
+    - Update instance status if filed on portal but not in system
+    - Log sync to api_sync_log table
+    - Notify tax lead of discrepancies
+    """
+```
+
+### 14.3 MCA (Ministry of Corporate Affairs) Integration
+**File**: `backend/app/services/external_integrations/mca_adapter.py`
+
+Functions:
+```python
+class MCAAdapter(ExternalAPIAdapter):
+    async def fetch_company_details(self, cin: str):
+        """
+        Fetch company master data from MCA V3 API
+
+        Returns: {
+            'company_name': '...',
+            'registration_number': '...',
+            'directors': [...],
+            'authorized_capital': 10000000,
+            'upcoming_filings': [...]
+        }
+        """
+
+    async def sync_director_changes(self, entity_id: UUID):
+        """Sync director list and update entity metadata"""
+```
+
+**Celery Task**:
+```python
+@celery_app.task
+def sync_mca_data_weekly():
+    """Run weekly to sync company master data"""
+```
+
+### 14.4 ERP Connectors
+**File**: `backend/app/services/external_integrations/erp_adapter.py`
+
+Support for:
+- SAP S/4HANA (OData API)
+- Oracle Financials (REST API)
+- NetSuite (SuiteTalk SOAP API)
+
+Functions:
+```python
+class ERPAdapter(ExternalAPIAdapter):
+    async def fetch_pl_statement(self, entity_id: UUID, period: str):
+        """Pull P&L for FP&A compliance auto-fill"""
+
+    async def fetch_balance_sheet(self, entity_id: UUID, period: str):
+        """Pull balance sheet data"""
+```
+
+### 14.5 API Sync Log Table
+**Alembic Migration**: `backend/alembic/versions/xxx_add_sync_log.py`
+
+```sql
+CREATE TABLE api_sync_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID REFERENCES tenants(id),
+    entity_id UUID REFERENCES entities(id),
+    api_provider VARCHAR(50) NOT NULL,  -- GSTN, MCA, SAP, ORACLE
+    sync_type VARCHAR(50) NOT NULL,     -- filing_status, master_data, financial_data
+    status VARCHAR(20) NOT NULL,        -- success, partial_success, failed
+    records_synced INT DEFAULT 0,
+    error_message TEXT,
+    started_at TIMESTAMP NOT NULL,
+    completed_at TIMESTAMP,
+    metadata JSONB
+);
+
+CREATE INDEX idx_sync_log_provider_status
+ON api_sync_log (api_provider, status, started_at DESC);
+```
+
+**Deliverables**:
+- ✅ Adapter pattern implemented with base class
+- ✅ GSTN adapter syncing filing status daily
+- ✅ MCA adapter syncing company data weekly
+- ✅ ERP connectors pulling financial data
+- ✅ API sync log tracking all sync attempts
+- ✅ Admin dashboard shows sync health
+- ✅ Alerts on repeated sync failures
+
+---
+
+## Phase 15: Data Import & Migration Features
+
+**Status**: Elevated to V1 based on customer needs
+**Purpose**: Enable fast onboarding with bulk data import
+
+### 15.1 Bulk Import Templates
+**Files**:
+- `backend/app/schemas/bulk_import.py` - Import schemas
+- `backend/app/api/v1/endpoints/bulk_import.py` - Import endpoints
+- `backend/app/services/bulk_import_service.py` - Validation and processing logic
+
+### 15.2 Compliance Master Bulk Import
+**Endpoint**: `POST /api/v1/bulk-import/compliance-masters`
+
+Accepts: CSV or Excel file
+
+**Template Columns**:
+- compliance_code
+- compliance_name
+- description
+- category
+- sub_category
+- frequency
+- due_date_day (for monthly)
+- due_date_offset_days
+- owner_role_code
+- approver_role_code
+- authority
+- penalty_details
+- reference_link
+
+**Processing Flow**:
+1. Upload file → Parse CSV/Excel
+2. Validate required columns
+3. Validate data types and formats
+4. Check for duplicates (existing compliance_codes)
+5. Show preview with errors highlighted
+6. User fixes errors or proceeds
+7. Bulk insert to database
+8. Return success count + error list
+
+### 15.3 Compliance Instance Bulk Import
+**Endpoint**: `POST /api/v1/bulk-import/compliance-instances`
+
+**Use Case**: Import 3 years of historical filing data
+
+**Template Columns**:
+- compliance_code
+- entity_code
+- period_start (YYYY-MM-DD)
+- period_end (YYYY-MM-DD)
+- due_date (YYYY-MM-DD)
+- status (Completed, Not Started, etc.)
+- filing_date (if completed)
+- owner_email
+- approver_email
+
+**Validation**:
+- compliance_code and entity_code must exist
+- Dates must be valid
+- Status must be from enum
+- Owner/approver emails must match existing users
+
+### 15.4 Entity Bulk Import
+**Endpoint**: `POST /api/v1/bulk-import/entities`
+
+**Use Case**: Setup 20+ legal entities at once
+
+**Template Columns**:
+- entity_code
+- entity_name
+- entity_type
+- pan
+- gstin
+- cin
+- address
+- city
+- state
+- pincode
+- contact_email
+
+### 15.5 User Bulk Import
+**Endpoint**: `POST /api/v1/bulk-import/users`
+
+**Use Case**: Onboard 50 users in one go
+
+**Template Columns**:
+- email
+- first_name
+- last_name
+- roles (comma-separated: CFO,TAX_LEAD)
+- entity_codes (comma-separated for entity access)
+- send_welcome_email (yes/no)
+
+**Auto-Generated**:
+- Temporary password (emailed to user)
+- Force password change on first login
+
+### 15.6 Frontend Import UI
+**Pages**:
+- `frontend/src/app/(dashboard)/import/compliance-masters/page.tsx`
+- `frontend/src/app/(dashboard)/import/compliance-instances/page.tsx`
+- `frontend/src/app/(dashboard)/import/entities/page.tsx`
+- `frontend/src/app/(dashboard)/import/users/page.tsx`
+
+**Common Flow**:
+1. Download template button
+2. Upload file (drag-drop or browse)
+3. Validation results table (red rows = errors)
+4. Preview successful rows
+5. Confirm import
+6. Progress bar
+7. Results summary (X created, Y failed)
+8. Download error report CSV
+
+**Deliverables**:
+- ✅ Bulk import for compliance masters working
+- ✅ Bulk import for compliance instances working
+- ✅ Bulk import for entities working
+- ✅ Bulk import for users working
+- ✅ Excel/CSV templates downloadable
+- ✅ Validation robust (catches all errors)
+- ✅ Frontend UI intuitive with progress feedback
+
+---
+
+## Phase 16: Production Hardening & Security
+
+**Status**: Critical for deployment - Before production launch
+**Purpose**: Ensure production-ready security and reliability
+
+### 16.1 Security Headers Middleware
+**File**: `backend/app/middleware/security_headers.py`
+
+Add headers:
+```python
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+    return response
+```
+
+### 16.2 Rate Limiting
+**File**: `backend/app/middleware/rate_limiter.py`
+
+Using `slowapi` library:
+```python
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+
+@app.post("/api/v1/auth/login")
+@limiter.limit("5/minute")  # 5 attempts per minute
+async def login(request: Request, ...):
+    ...
+```
+
+**Apply to**:
+- Login: 5 per minute per IP
+- Signup: 3 per hour per IP
+- Evidence upload: 20 per hour per user
+- API calls: 100 per minute per user
+
+### 16.3 Enhanced Health Check Endpoint
+**File**: `backend/app/api/v1/endpoints/health.py`
+
+Replace simple health check with detailed status:
+```python
+@router.get("/health")
+async def health_check(db: Session = Depends(get_db)):
+    """
+    Comprehensive health check
+
+    Returns: {
+        'status': 'healthy',
+        'timestamp': '2024-12-19T10:30:00Z',
+        'version': '1.0.0',
+        'database': 'connected',
+        'redis': 'connected',
+        'celery': 'running',
+        's3': 'accessible'
+    }
+    """
+    checks = {
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'version': app.version,
+        'database': check_database(db),
+        'redis': check_redis(),
+        'celery': check_celery(),
+        's3': check_s3(),
+    }
+
+    # Return 503 if any critical service is down
+    if any(v != 'connected' and v != 'running' for k, v in checks.items() if k not in ['status', 'timestamp', 'version']):
+        raise HTTPException(status_code=503, detail=checks)
+
+    return checks
+```
+
+### 16.4 Improved Dockerfile (Multi-Stage Build)
+**File**: `backend/Dockerfile`
+
+```dockerfile
+# Stage 1: Build dependencies
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --user -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser
+
+WORKDIR /app
+COPY --from=builder /root/.local /home/appuser/.local
+COPY . .
+
+# Set ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Add local bin to PATH
+ENV PATH=/home/appuser/.local/bin:$PATH
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/api/v1/health || exit 1
+
+# Run app
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### 16.5 JWT Token Expiry Update
+**File**: `backend/app/core/config.py`
+
+Change from 24 hours to 30 minutes:
+```python
+class Settings(BaseSettings):
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # Changed from 1440 (24 hours)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+```
+
+### 16.6 Tenant Branding Database Migration
+**Alembic Migration**: `backend/alembic/versions/xxx_add_tenant_branding.py`
+
+```sql
+ALTER TABLE tenants ADD COLUMN logo_url VARCHAR(500);
+ALTER TABLE tenants ADD COLUMN primary_color VARCHAR(7);   -- Hex color
+ALTER TABLE tenants ADD COLUMN secondary_color VARCHAR(7);
+ALTER TABLE tenants ADD COLUMN company_website VARCHAR(500);
+ALTER TABLE tenants ADD COLUMN support_email VARCHAR(255);
+```
+
+### 16.7 CI/CD Pipeline (GitHub Actions)
+**File**: `.github/workflows/ci-cd.yml`
+
+```yaml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Backend Tests
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pytest --cov=app --cov-report=xml
+
+      - name: Frontend Tests
+        run: |
+          cd frontend
+          npm install
+          npm run test
+          npm run lint
+
+  deploy-dev:
+    needs: test
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Dev (Render)
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_DEV }}
+
+  deploy-prod:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backup Database
+        run: |
+          pg_dump ${{ secrets.PROD_DATABASE_URL }} > backup.sql
+          aws s3 cp backup.sql s3://compliance-os-backups/prod/
+
+      - name: Deploy to Production (Render)
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_PROD }}
+
+      - name: Notify Team
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
+            -d '{"text":"✅ Deployed to production"}'
+```
+
+### 16.8 Deployment Scripts
+**Files**:
+- `scripts/deploy_prod.sh` - Production deployment with safety checks
+- `scripts/backup_db.sh` - Database backup automation
+- `scripts/restore_db.sh` - Database restore procedure
+- `scripts/health_check.sh` - Post-deployment health verification
+
+**deploy_prod.sh**:
+```bash
+#!/bin/bash
+set -e
+
+echo "🚀 Starting production deployment..."
+
+# 1. Pre-deployment backup
+echo "📦 Backing up database..."
+./scripts/backup_db.sh
+
+# 2. Trigger deployment
+echo "🎯 Triggering Render deployment..."
+curl -X POST $RENDER_DEPLOY_HOOK_PROD
+
+# 3. Wait for deployment
+echo "⏳ Waiting for deployment (60s)..."
+sleep 60
+
+# 4. Health check
+echo "🏥 Running health checks..."
+./scripts/health_check.sh
+
+# 5. Notify team
+echo "📢 Notifying team..."
+curl -X POST $SLACK_WEBHOOK \
+  -d '{"text":"✅ Production deployment successful"}'
+
+echo "✅ Deployment complete!"
+```
+
+**Deliverables**:
+- ✅ Security headers middleware active
+- ✅ Rate limiting on critical endpoints
+- ✅ Comprehensive health check endpoint
+- ✅ Multi-stage Dockerfile with non-root user
+- ✅ JWT token expiry reduced to 30 minutes
+- ✅ Tenant branding columns added
+- ✅ CI/CD pipeline automating tests and deployment
+- ✅ Deployment scripts for safe production deploys
+
+---
+
 ## Implementation Timeline
 
-**Estimated Duration**: 8-12 weeks (1 developer full-time)
+**Estimated Duration**: 18-24 weeks (1 developer full-time)
 
-| Phase | Duration | Dependencies |
-|-------|----------|--------------|
-| Phase 1: Database Foundation | 1 week | - |
-| Phase 2: Backend Auth | 1 week | Phase 1 |
-| Phase 3: Backend CRUD | 2 weeks | Phase 2 |
-| Phase 4: Business Logic | 1.5 weeks | Phase 3 |
-| Phase 5: Background Jobs | 1 week | Phase 4 |
-| Phase 6: Frontend Auth & Layout | 1 week | Phase 2 |
-| Phase 7: Frontend Dashboards | 1.5 weeks | Phase 3, 6 |
-| Phase 8: Frontend Compliance Mgmt | 1.5 weeks | Phase 3, 6 |
-| Phase 9: Frontend Workflow & Evidence | 1.5 weeks | Phase 3, 6 |
-| Phase 10: Frontend Admin | 1 week | Phase 6 |
-| Phase 11: Testing & Quality | 2 weeks | All phases |
-| Phase 12: Deployment & Docs | 1 week | All phases |
+### V1 Core (Phases 1-12) - 8-12 weeks
+
+| Phase | Duration | Dependencies | Status |
+|-------|----------|--------------|--------|
+| Phase 1: Database Foundation | 1 week | - | ✅ Complete |
+| Phase 2: Backend Auth | 1 week | Phase 1 | ✅ Complete |
+| Phase 3: Backend CRUD | 2 weeks | Phase 2 | ⏳ Pending |
+| Phase 4: Business Logic | 1.5 weeks | Phase 3 | ⏳ Pending |
+| Phase 5: Background Jobs | 1 week | Phase 4 | ⏳ Pending |
+| Phase 6: Frontend Auth & Layout | 1 week | Phase 2 | ⏳ Pending |
+| Phase 7: Frontend Dashboards | 1.5 weeks | Phase 3, 6 | ⏳ Pending |
+| Phase 8: Frontend Compliance Mgmt | 1.5 weeks | Phase 3, 6 | ⏳ Pending |
+| Phase 9: Frontend Workflow & Evidence | 1.5 weeks | Phase 3, 6 | ⏳ Pending |
+| Phase 10: Frontend Admin | 1 week | Phase 6 | ⏳ Pending |
+| Phase 11: Testing & Quality | 2 weeks | All phases | ⏳ Pending |
+| Phase 12: Deployment & Docs | 1 week | All phases | ⏳ Pending |
 
 **Parallel Work Opportunities**:
 - Frontend phases (6-10) can start once backend CRUD (Phase 3) is complete
 - Testing can be written alongside development (shift-left approach)
 - Documentation can be written incrementally
+
+### V1 Production Hardening (Phases 15-16) - 2-3 weeks
+
+Note: Phase 15 (Data Import) elevated to V1 based on customer needs
+
+| Phase | Duration | Dependencies | Status |
+|-------|----------|--------------|--------|
+| Phase 15: Data Import & Migration | 2 weeks | Phase 3 | ⏳ Pending |
+| Phase 16: Production Hardening | 1 week | Phase 12 | ⏳ Pending |
+
+**Total V1 Timeline**: 12-16 weeks
+
+### V2 AI & Integrations (Phases 13-14) - 8-12 weeks
+
+| Phase | Duration | Dependencies | Status |
+|-------|----------|--------------|--------|
+| Phase 13: AI Service Layer | 6 weeks | V1 complete | 🔮 Future |
+| Phase 14: External API Integrations | 4-6 weeks | V1 complete | 🔮 Future |
+
+**Total V2 Timeline**: 8-12 weeks (Month 6-12 post-V1 launch)
 
 ---
 

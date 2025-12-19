@@ -266,4 +266,3 @@ Contributions are welcome! Please read our [Contributing Guidelines](./CONTRIBUT
 ---
 
 **Remember**: "If it cannot stand up to an auditor, it does not ship." 🎯
-
