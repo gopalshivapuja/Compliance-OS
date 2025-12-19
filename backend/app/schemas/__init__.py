@@ -1,6 +1,7 @@
 """
 Pydantic schemas for request/response validation
 """
+
 from app.schemas.auth import (
     LoginRequest,
     TokenResponse,
@@ -32,6 +33,13 @@ from app.schemas.audit import (
     AuditLogListResponse,
     ResourceAuditTrailResponse,
 )
+from app.schemas.tenant import (
+    TenantBase,
+    TenantCreate,
+    TenantUpdate,
+    TenantResponse,
+    TenantListResponse,
+)
 
 __all__ = [
     # Auth schemas
@@ -60,4 +68,10 @@ __all__ = [
     "AuditLogResponse",
     "AuditLogListResponse",
     "ResourceAuditTrailResponse",
+    # Tenant schemas
+    "TenantBase",
+    "TenantCreate",
+    "TenantUpdate",
+    "TenantResponse",
+    "TenantListResponse",
 ]
