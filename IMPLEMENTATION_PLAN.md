@@ -735,6 +735,18 @@ def create_notification(user_id: UUID, notification_type: str, title: str, messa
 - ✅ Email notifications sending
 - ✅ In-app notifications created
 
+### Phase 4 Verification Checklist
+- [ ] All business logic endpoints implemented and tested
+- [ ] Compliance engine generates instances correctly for all frequency types
+- [ ] RAG status calculation accurate (Green/Amber/Red thresholds)
+- [ ] Workflow task state transitions validated
+- [ ] Email notification templates reviewed
+- [ ] Audit logging on all state changes
+- [ ] Multi-tenant isolation verified
+- [ ] Test coverage > 80%
+- [ ] PROGRESS.md and CHANGELOG.md updated
+- [ ] No TODO/FIXME in committed code (document as future scope if needed)
+
 ---
 
 ## Phase 5: Backend Background Jobs
@@ -848,6 +860,18 @@ python -c "from app.tasks.compliance_tasks import generate_compliance_instances_
 - ✅ Email queue processing
 - ✅ Celery Beat scheduler running
 
+### Phase 5 Verification Checklist
+- [ ] Celery worker starts without errors
+- [ ] Celery Beat scheduler triggers tasks on schedule
+- [ ] Instance generation creates correct instances for all entities
+- [ ] RAG recalculation updates statuses accurately
+- [ ] Reminder notifications sent at T-3, T-0, T+3 days
+- [ ] Email queue processes and delivers successfully
+- [ ] Redis connection stable under load
+- [ ] Background tasks logged for debugging
+- [ ] Test coverage > 80% for task logic
+- [ ] PROGRESS.md and CHANGELOG.md updated
+
 ---
 
 ## Phase 6: Frontend Authentication & Layout
@@ -954,6 +978,18 @@ Dropdown with:
 - ✅ Notifications bell with unread count
 - ✅ User menu with logout
 
+### Phase 6 Verification Checklist
+- [ ] Login page renders correctly on all screen sizes
+- [ ] Form validation shows appropriate error messages
+- [ ] JWT tokens stored securely (httpOnly cookies or secure storage)
+- [ ] Token refresh works seamlessly
+- [ ] Protected routes redirect unauthenticated users
+- [ ] Sidebar navigation works correctly
+- [ ] Notifications bell shows unread count
+- [ ] Logout clears all session data
+- [ ] Component tests written and passing
+- [ ] PROGRESS.md and CHANGELOG.md updated
+
 ---
 
 ## Phase 7: Frontend Dashboard Views
@@ -1057,6 +1093,18 @@ Create chart components:
 - ✅ React Query integration for data fetching
 - ✅ Charts rendering correctly
 - ✅ Filters and navigation working
+
+### Phase 7 Verification Checklist
+- [ ] Executive dashboard shows accurate RAG counts
+- [ ] Charts render correctly with real data
+- [ ] Calendar displays instances on correct dates
+- [ ] Owner view shows only user's assigned items
+- [ ] Filters work across all dashboard views
+- [ ] Data refreshes automatically (React Query)
+- [ ] Loading states displayed during data fetch
+- [ ] Error states handled gracefully
+- [ ] Dashboard tests written and passing
+- [ ] PROGRESS.md and CHANGELOG.md updated
 
 ---
 
@@ -1215,6 +1263,18 @@ Sections:
 - ✅ Instance detail view with tabs
 - ✅ All forms validated with Zod
 
+### Phase 8 Verification Checklist
+- [ ] Compliance Masters CRUD works end-to-end
+- [ ] Bulk import handles CSV/Excel with validation
+- [ ] Import preview shows errors before committing
+- [ ] Compliance Instances list filters correctly
+- [ ] Instance detail tabs display all information
+- [ ] Form validation provides clear error messages
+- [ ] Create/edit operations save correctly
+- [ ] RBAC enforced on admin operations
+- [ ] Component tests written and passing
+- [ ] PROGRESS.md and CHANGELOG.md updated
+
 ---
 
 ## Phase 9: Frontend Workflow & Evidence
@@ -1362,6 +1422,19 @@ async function downloadEvidence(evidenceId: string) {
 - ✅ File download with signed URLs
 - ✅ Preview for images/PDFs
 
+### Phase 9 Verification Checklist
+- [ ] Workflow tasks list shows correct data
+- [ ] Task assignment saves correctly
+- [ ] Status transitions work (Pending → In Progress → Complete/Reject)
+- [ ] Evidence upload handles all file types within size limits
+- [ ] Drag-drop upload works correctly
+- [ ] Version history displays correctly
+- [ ] CFO can approve/reject evidence
+- [ ] Download generates valid signed URLs
+- [ ] File preview works for images and PDFs
+- [ ] Component tests written and passing
+- [ ] PROGRESS.md and CHANGELOG.md updated
+
 ---
 
 ## Phase 10: Frontend Admin Features
@@ -1458,6 +1531,18 @@ On save:
 - ✅ Role assignment UI
 - ✅ Entity management (CRUD)
 - ✅ Entity access management (grant/revoke)
+
+### Phase 10 Verification Checklist
+- [ ] Tenant management restricted to System Admin
+- [ ] User creation works with all required fields
+- [ ] User deactivation prevents login
+- [ ] Role assignment updates user permissions immediately
+- [ ] Entity CRUD operations work correctly
+- [ ] Entity access changes take effect immediately
+- [ ] Admin UI accessible only to authorized roles
+- [ ] Audit logs capture all admin operations
+- [ ] Component tests written and passing
+- [ ] PROGRESS.md and CHANGELOG.md updated
 
 ---
 
@@ -1604,6 +1689,18 @@ Verify:
 - ✅ Frontend component tests
 - ✅ E2E tests for critical flows
 - ✅ Load tests passed
+
+### Phase 11 Verification Checklist
+- [ ] Backend unit test coverage > 80%
+- [ ] All API endpoints have integration tests
+- [ ] Frontend component tests pass
+- [ ] E2E tests cover login, compliance creation, evidence workflow
+- [ ] Load tests show < 500ms response under 100 concurrent users
+- [ ] Security tests verify RBAC and tenant isolation
+- [ ] No critical or high severity bugs open
+- [ ] All pre-commit hooks pass
+- [ ] CI/CD pipeline green
+- [ ] PROGRESS.md and CHANGELOG.md updated
 
 ---
 
@@ -1756,6 +1853,22 @@ Include screenshots for key flows.
 - ✅ Deployment guide complete
 - ✅ API docs clean and complete
 - ✅ User manual with role-specific instructions
+
+### Phase 12 Verification Checklist (Production Readiness)
+- [ ] All environment variables documented
+- [ ] Docker Compose starts all services correctly
+- [ ] Database backup/restore procedures tested
+- [ ] Deployment to staging environment successful
+- [ ] Deployment to production environment successful
+- [ ] SSL certificates configured
+- [ ] Health check endpoints responding
+- [ ] Monitoring and alerting configured
+- [ ] API documentation complete and accurate
+- [ ] User manual covers all roles and flows
+- [ ] Security audit completed
+- [ ] Performance benchmarks met
+- [ ] PROGRESS.md and CHANGELOG.md updated
+- [ ] Git tag created for v1.0.0
 
 ---
 

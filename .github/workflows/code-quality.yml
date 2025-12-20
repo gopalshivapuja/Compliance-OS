@@ -38,6 +38,7 @@ jobs:
 
       - name: Type check with MyPy
         working-directory: ./backend
+        # TODO(Phase 4): Remove soft-fail after fixing mypy errors in services
         run: mypy app/ --ignore-missing-imports || echo "MyPy check completed with warnings"
 
   frontend-quality:
@@ -61,6 +62,7 @@ jobs:
 
       - name: Check code formatting with Prettier
         working-directory: ./frontend
+        # TODO(Phase 6): Remove soft-fail after frontend implementation
         run: npm run format:check || echo "Prettier check not configured yet"
 
       - name: Lint with ESLint
@@ -69,4 +71,5 @@ jobs:
 
       - name: Type check with TypeScript
         working-directory: ./frontend
+        # TODO(Phase 6): Remove soft-fail after frontend implementation
         run: npm run type-check || echo "Type check not configured yet"

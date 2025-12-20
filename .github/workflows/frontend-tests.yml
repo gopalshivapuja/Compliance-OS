@@ -36,10 +36,12 @@ jobs:
 
       - name: Run TypeScript type check
         working-directory: ./frontend
+        # TODO(Phase 6): Remove soft-fail after frontend implementation
         run: npm run type-check || echo "Type check not configured yet"
 
       - name: Run tests
         working-directory: ./frontend
+        # TODO(Phase 11): Remove soft-fail after test suite creation
         run: npm test -- --coverage --watchAll=false || echo "Tests not configured yet"
 
       - name: Build application

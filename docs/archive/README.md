@@ -8,10 +8,18 @@ This directory contains archived documentation from completed phases of the Comp
 docs/archive/
 ├── checkpoints/          # Milestone checkpoint files
 │   ├── phase1/          # Phase 1 milestone checkpoints (if any)
-│   └── phase2/          # Phase 2 milestone checkpoints (M1-M5)
+│   ├── phase2/          # Phase 2 milestone checkpoints (M1-M5)
+│   └── phase3/          # Phase 3 milestone checkpoints
 ├── phase_guides/        # Phase-specific setup and execution guides
+├── deprecated/          # Superseded documents (consolidated into new files)
 └── README.md            # This file
 ```
+
+### Deprecated Documents
+
+The following documents were consolidated into `DEPLOYMENT.md` (December 2024):
+- `deprecated/DEPLOYMENT_PLAN.md` - Original detailed deployment planning (1091 lines)
+- `deprecated/DEPLOYMENT_STRATEGY.md` - Original deployment strategy (979 lines)
 
 ## Archive Policy
 
@@ -55,7 +63,7 @@ The following files always remain in the project root:
 - Status: All database models, migrations, and seed data complete
 
 ### Phase 2: Auth & RBAC ✅
-**Completed**: December 18, 2025
+**Completed**: December 18, 2024
 - Location: `checkpoints/phase2/`
 - Files Archived:
   - `CHECKPOINT_M1_COMPLETE.md` - Authentication Endpoints
@@ -65,6 +73,21 @@ The following files always remain in the project root:
   - `CHECKPOINT_M5_COMPLETE.md` - Audit Logging Service & API
   - `AUDIT_LOG_API_TEST.md` - Comprehensive API testing documentation
 - Summary: JWT authentication, RBAC, entity access control, audit logging, dashboard API
+
+### Phase 3: CRUD Operations ✅
+**Completed**: December 20, 2024
+- Location: `checkpoints/phase3/`, `phase_guides/PHASE3_STARTUP_GUIDE.md`
+- Files Archived:
+  - `PHASE3_STARTUP_GUIDE.md` - Phase 3 setup and execution guide
+- Summary: Complete CRUD for all entities:
+  - Tenants CRUD with soft delete
+  - Users CRUD with role assignment
+  - Entities CRUD with entity access control
+  - Compliance Masters CRUD
+  - Compliance Instances CRUD with RAG status
+  - Workflow Tasks CRUD with completion flow
+  - Evidence CRUD with upload/download/approval
+- Test Results: 238 passing tests (83.5% pass rate)
 
 ## Accessing Archived Documentation
 
@@ -95,5 +118,5 @@ grep -r "audit logging" docs/archive/
 
 ---
 
-**Last Updated**: December 18, 2025
-**Total Phases Archived**: 2 of 12
+**Last Updated**: December 20, 2024
+**Total Phases Archived**: 3 of 12

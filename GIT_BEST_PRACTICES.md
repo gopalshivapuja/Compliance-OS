@@ -1,26 +1,32 @@
 # Git Best Practices for Compliance OS
 
+**Version**: 1.1
+**Last Updated**: December 2024
+
 ## Executive Summary
 
-This guide provides a comprehensive Git workflow strategy for managing large changes in the Compliance OS project, tailored for solo development with atomic commits and feature branch workflow.
+This guide provides a comprehensive Git workflow strategy for the Compliance OS project, covering atomic commits, feature branch workflow, and phase-based development patterns.
 
 ---
 
 ## Table of Contents
 
-1. [Handling Current Uncommitted Changes](#part-1-handling-current-uncommitted-changes-17-tasks)
-2. [Git Workflow Best Practices Going Forward](#part-2-git-workflow-best-practices-going-forward)
+1. [Example: Handling Large Changes (Historical)](#part-1-example-handling-large-changes-historical)
+2. [Git Workflow Best Practices](#part-2-git-workflow-best-practices-going-forward)
 3. [Advanced Git Techniques](#part-3-advanced-git-techniques)
 4. [Workflow for Specific Project Phases](#part-4-workflow-for-specific-project-phases)
 5. [Git Best Practices Checklist](#part-5-git-best-practices-checklist)
 6. [Compliance OS-Specific Git Practices](#part-6-compliance-os-specific-git-practices)
 7. [Troubleshooting Common Git Issues](#part-7-troubleshooting-common-git-issues)
-8. [Summary: Your Custom Git Workflow](#summary-your-custom-git-workflow)
+8. [Summary: Custom Git Workflow](#summary-your-custom-git-workflow)
 9. [Quick Reference Commands](#appendix-quick-reference-commands)
 
 ---
 
-## Part 1: Handling Current Uncommitted Changes (17 Tasks)
+## Part 1: Example: Handling Large Changes (Historical)
+
+> **Note**: This section documents a real-world example from Phase 3 development (December 2024).
+> Use it as a reference for breaking down large changesets into atomic commits.
 
 ### Current Status
 - **Modified files**: 14 files (1,691 insertions, 147 deletions)
