@@ -4,7 +4,7 @@ OCR + LLM Data Extraction Service (V2)
 Extracts structured data from PDF compliance forms using Claude Vision API
 """
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from fastapi import UploadFile
 
 

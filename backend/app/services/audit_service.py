@@ -9,7 +9,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Optional, Dict, Any, Union
-from uuid import uuid4, UUID
+from uuid import UUID
 
 from app.models.audit_log import AuditLog
 

@@ -4,7 +4,6 @@ Tenant management endpoints
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from typing import Optional
 from datetime import datetime
 
@@ -158,9 +157,7 @@ async def list_tenants(
 
     if search:
         search_term = f"%{search}%"
-        query = query.filter(
-            (Tenant.tenant_name.ilike(search_term)) | (Tenant.tenant_code.ilike(search_term))
-        )
+        query = query.filter((Tenant.tenant_name.ilike(search_term)) | (Tenant.tenant_code.ilike(search_term)))
 
     # Get total count
     total = query.count()

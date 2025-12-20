@@ -15,4 +15,4 @@ NOTE: These integrations will be implemented in V2 (Phase 14).
 # from .mca_adapter import MCAAdapter
 # from .erp_adapter import ERPAdapter, SAPAdapter, OracleAdapter
 
-__all__ = []  # Empty for V1
+__all__: list[str] = []  # Empty for V1

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from app.core.database import get_db
-from app.core.redis import get_redis_client
+from app.core.redis import get_redis as get_redis_client
 from app.core.config import settings
 
 router = APIRouter()
@@ -128,10 +128,7 @@ async def health_check(db: Session = Depends(get_db)) -> Dict[str, Any]:
     }
 
     # Check if any critical service is down
-    critical_down = any(
-        status.startswith("error") or status == "disconnected"
-        for status in critical_services.values()
-    )
+    critical_down = any(status.startswith("error") or status == "disconnected" for status in critical_services.values())
 
     if critical_down:
         health_status["status"] = "unhealthy"

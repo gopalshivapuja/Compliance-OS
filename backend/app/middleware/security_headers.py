@@ -4,7 +4,6 @@ Security headers middleware for enhanced application security
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -48,9 +47,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "frame-ancestors 'none'"
         )
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = (
-            "geolocation=(), " "microphone=(), " "camera=(), " "payment=()"
-        )
+        response.headers["Permissions-Policy"] = "geolocation=(), " "microphone=(), " "camera=(), " "payment=()"
 
         return response
 

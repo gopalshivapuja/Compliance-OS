@@ -4,7 +4,6 @@ Compliance Instance management endpoints
 
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from typing import Optional
 from uuid import UUID
 
@@ -285,11 +284,11 @@ async def update_compliance_instance(
 
     if update_data.owner_user_id is not None:
         instance.owner_user_id = UUID(update_data.owner_user_id)
-        changes.append(f"owner changed")
+        changes.append("owner changed")
 
     if update_data.approver_user_id is not None:
         instance.approver_user_id = UUID(update_data.approver_user_id)
-        changes.append(f"approver changed")
+        changes.append("approver changed")
 
     if update_data.filed_date is not None:
         instance.filed_date = update_data.filed_date
@@ -335,9 +334,7 @@ async def update_compliance_instance(
         old_values=old_values,
         new_values=new_values,
         change_summary=(
-            f"Updated compliance instance: {', '.join(changes)}"
-            if changes
-            else "Updated compliance instance"
+            f"Updated compliance instance: {', '.join(changes)}" if changes else "Updated compliance instance"
         ),
     )
 

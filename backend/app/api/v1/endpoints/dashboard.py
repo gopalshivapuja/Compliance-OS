@@ -4,7 +4,7 @@ Dashboard endpoints for aggregated views
 
 from datetime import date, timedelta
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_tenant_id
@@ -39,9 +39,7 @@ async def get_dashboard_overview(
 
     # Get total count
     total_compliances = (
-        db.query(func.count(ComplianceInstance.id))
-        .filter(ComplianceInstance.tenant_id == tenant_id)
-        .scalar()
+        db.query(func.count(ComplianceInstance.id)).filter(ComplianceInstance.tenant_id == tenant_id).scalar()
     )
 
     # Get RAG counts

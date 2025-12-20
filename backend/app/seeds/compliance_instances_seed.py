@@ -83,10 +83,7 @@ def generate_compliance_instances(
 
     # Get compliance masters
     masters = (
-        db.query(ComplianceMaster)
-        .filter(ComplianceMaster.tenant_id.is_(None))  # System-wide templates
-        .limit(12)
-        .all()
+        db.query(ComplianceMaster).filter(ComplianceMaster.tenant_id.is_(None)).limit(12).all()  # System-wide templates
     )
 
     if not masters:
@@ -196,9 +193,7 @@ def generate_compliance_instances(
     rag_counts = {"Green": 0, "Amber": 0, "Red": 0}
     for instance in instances:
         rag_counts[instance.rag_status] += 1
-    print(
-        f"    RAG Distribution: Green={rag_counts['Green']}, Amber={rag_counts['Amber']}, Red={rag_counts['Red']}"
-    )
+    print(f"    RAG Distribution: Green={rag_counts['Green']}, Amber={rag_counts['Amber']}, Red={rag_counts['Red']}")
 
     return instances
 
@@ -219,11 +214,7 @@ def main():
             print("❌ Test tenant not found. Please create a test tenant first.")
             return
 
-        user = (
-            db.query(User)
-            .filter(User.tenant_id == tenant.id, User.email == "admin@testgcc.com")
-            .first()
-        )
+        user = db.query(User).filter(User.tenant_id == tenant.id, User.email == "admin@testgcc.com").first()
         if not user:
             print("❌ Test user not found. Please create a test user first.")
             return
@@ -244,17 +235,17 @@ def main():
             from sqlalchemy import text
 
             existing = db.execute(
-                text(
-                    "SELECT 1 FROM entity_access WHERE user_id = :user_id AND entity_id = :entity_id"
-                ),
+                text("SELECT 1 FROM entity_access WHERE user_id = :user_id AND entity_id = :entity_id"),
                 {"user_id": str(user.id), "entity_id": str(entity.id)},
             ).first()
 
             if not existing:
+                insert_sql = """
+                    INSERT INTO entity_access (user_id, entity_id, tenant_id)
+                    VALUES (:user_id, :entity_id, :tenant_id)
+                """
                 db.execute(
-                    text(
-                        "INSERT INTO entity_access (user_id, entity_id, tenant_id) VALUES (:user_id, :entity_id, :tenant_id)"
-                    ),
+                    text(insert_sql),
                     {
                         "user_id": str(user.id),
                         "entity_id": str(entity.id),
@@ -278,7 +269,7 @@ def main():
         print("SEEDING COMPLETED SUCCESSFULLY!")
         print("=" * 70)
         print()
-        print(f"Summary:")
+        print("Summary:")
         print(f"  - Entities created: {len(entities)}")
         print(f"  - Compliance instances created: {len(instances)}")
         print()

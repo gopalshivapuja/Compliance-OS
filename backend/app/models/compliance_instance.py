@@ -14,9 +14,7 @@ class ComplianceInstance(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
     __tablename__ = "compliance_instances"
 
     # Denormalized tenant_id for performance (avoids join with entities)
-    tenant_id = Column(
-        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # References
     compliance_master_id = Column(
@@ -40,17 +38,11 @@ class ComplianceInstance(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
     # Status tracking
     status = Column(String(50), nullable=False, default="Not Started", index=True)
     # Not Started, In Progress, Review, Pending Approval, Filed, Completed, Blocked, Overdue
-    rag_status = Column(
-        String(10), nullable=False, default="Green", index=True
-    )  # Green, Amber, Red
+    rag_status = Column(String(10), nullable=False, default="Green", index=True)  # Green, Amber, Red
 
     # Ownership
-    owner_user_id = Column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
-    )
-    approver_user_id = Column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    owner_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    approver_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Dependency tracking (blocking instance)
     blocking_compliance_instance_id = Column(
@@ -83,12 +75,8 @@ class ComplianceInstance(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
     )
 
     # Child relationships
-    workflow_tasks = relationship(
-        "WorkflowTask", back_populates="compliance_instance", cascade="all, delete-orphan"
-    )
-    evidence = relationship(
-        "Evidence", back_populates="compliance_instance", cascade="all, delete-orphan"
-    )
+    workflow_tasks = relationship("WorkflowTask", back_populates="compliance_instance", cascade="all, delete-orphan")
+    evidence = relationship("Evidence", back_populates="compliance_instance", cascade="all, delete-orphan")
 
     # Composite indexes for common queries
     __table_args__ = (
@@ -114,4 +102,6 @@ class ComplianceInstance(Base, UUIDMixin, TenantScopedMixin, AuditMixin):
     )
 
     def __repr__(self):
-        return f"<ComplianceInstance {self.compliance_master.compliance_code if self.compliance_master else 'N/A'} - {self.entity.entity_code if self.entity else 'N/A'}: {self.status}>"
+        master_code = self.compliance_master.compliance_code if self.compliance_master else "N/A"
+        entity_code = self.entity.entity_code if self.entity else "N/A"
+        return f"<ComplianceInstance {master_code} - {entity_code}: {self.status}>"

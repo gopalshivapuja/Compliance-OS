@@ -8,7 +8,7 @@ NOTE: Requires slowapi package in requirements.txt:
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from fastapi import Request, HTTPException, status
+from fastapi import Request, status
 from starlette.responses import JSONResponse
 
 
@@ -45,7 +45,7 @@ def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
 RATE_LIMITS = {
     "login": "5/minute",  # 5 login attempts per minute per IP
     "signup": "3/hour",  # 3 signup attempts per hour per IP
-    "password_reset": "3/hour",  # 3 password reset requests per hour per IP
+    "password_reset": "3/hour",  # 3 password reset requests per hour per IP  # pragma: allowlist secret
     "evidence_upload": "20/hour",  # 20 evidence uploads per hour per user
     "api_general": "100/minute",  # 100 API calls per minute per user
 }

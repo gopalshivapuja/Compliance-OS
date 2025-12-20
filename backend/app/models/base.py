@@ -3,8 +3,8 @@ Base model classes and mixins for all database models
 """
 
 from datetime import datetime
-from uuid import UUID, uuid4
-from sqlalchemy import Column, DateTime, String
+from uuid import uuid4
+from sqlalchemy import Column, DateTime
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 

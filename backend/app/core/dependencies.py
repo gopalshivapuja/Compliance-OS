@@ -2,14 +2,9 @@
 FastAPI dependencies for authentication and authorization
 """
 
-from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.security import decode_access_token
-from app.core.database import get_db
-from app.core.redis import get_redis
-from sqlalchemy.orm import Session
-import redis
 
 # HTTP Bearer token scheme
 security = HTTPBearer()

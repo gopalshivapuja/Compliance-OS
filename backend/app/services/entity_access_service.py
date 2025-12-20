@@ -8,9 +8,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from uuid import UUID
 
-from app.models.entity import entity_access, Entity
+from app.models.entity import entity_access
 from app.models.user import User
-from app.models.role import Role
 
 
 def check_entity_access(

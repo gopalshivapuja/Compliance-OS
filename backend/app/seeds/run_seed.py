@@ -4,8 +4,8 @@ Seed runner script to populate initial data
 
 import sys
 from sqlalchemy.orm import Session
-from app.core.database import engine, SessionLocal
-from app.models import Base, ComplianceMaster, Role
+from app.core.database import SessionLocal
+from app.models import ComplianceMaster, Role
 from app.seeds.compliance_masters_seed import COMPLIANCE_MASTERS_SEED
 
 
@@ -95,15 +95,13 @@ def seed_compliance_masters(db: Session):
             )
             db.add(compliance_master)
             created_count += 1
-            print(
-                f"  ✓ Created: {master_data['compliance_code']} - {master_data['compliance_name']}"
-            )
+            print(f"  ✓ Created: {master_data['compliance_code']} - {master_data['compliance_name']}")
         else:
             skipped_count += 1
             print(f"  ⊘ Already exists: {master_data['compliance_code']}")
 
     db.commit()
-    print(f"\nCompliance masters seeding completed!")
+    print("\nCompliance masters seeding completed!")
     print(f"  Created: {created_count}")
     print(f"  Skipped: {skipped_count}")
     print(f"  Total: {created_count + skipped_count}\n")

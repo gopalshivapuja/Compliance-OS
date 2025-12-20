@@ -18,4 +18,4 @@ NOTE: These services will be implemented in V2 (Phase 13).
 # from .categorization import categorize_uploaded_evidence
 # from .embedding_service import generate_embeddings_for_documentation
 
-__all__ = []  # Empty for V1
+__all__: list[str] = []  # Empty for V1
