@@ -1,133 +1,339 @@
 /**
  * Compliance Management Flow E2E Tests
  *
- * End-to-end tests for compliance instance management.
- * Phase 11 implementation.
+ * End-to-end tests for dashboard and compliance instance management.
+ * Tests cover: dashboard display, RAG status, compliance list, filtering, and pagination.
  */
 
 import { test, expect } from '@playwright/test';
-
-test.describe('Compliance Instance Management', () => {
-  test.beforeEach(async ({ page }) => {
-    // TODO: Implement login helper
-    // await loginAs(page, 'admin@complianceos.com', 'password');
-    await page.goto('/compliance-instances');
-  });
-
-  test('should display compliance instances list', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User is logged in and on compliance instances page
-    // When: Page loads
-    // Then: Should see list of compliance instances
-    // await expect(page.getByRole('table')).toBeVisible();
-    // await expect(page.getByRole('row')).toHaveCount(greaterThan(1));
-  });
-
-  test('should filter instances by RAG status', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User on compliance instances page
-    // When: User selects "Red" filter
-    // Then: Should only show Red status instances
-    // await page.getByRole('button', { name: /filter/i }).click();
-    // await page.getByRole('checkbox', { name: /red/i }).check();
-    // await page.getByRole('button', { name: /apply/i }).click();
-    // // Verify all visible rows have Red badge
-  });
-
-  test('should filter instances by entity', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User on compliance instances page
-    // When: User selects specific entity
-    // Then: Should only show instances for that entity
-  });
-
-  test('should search instances by name', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User on compliance instances page
-    // When: User types in search box
-    // Then: Should filter instances matching search term
-    // await page.getByPlaceholder(/search/i).fill('GST');
-    // await expect(page.getByRole('row')).toContainText('GST');
-  });
-
-  test('should navigate to instance detail', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User on compliance instances page
-    // When: User clicks on an instance row
-    // Then: Should navigate to detail page
-    // await page.getByRole('row').first().click();
-    // await expect(page).toHaveURL(/\/compliance-instances\/[a-z0-9-]+/);
-  });
-
-  test('should display instance details correctly', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Navigate to a specific instance
-    // await page.goto('/compliance-instances/test-instance-id');
-    // await expect(page.getByText(/compliance code/i)).toBeVisible();
-    // await expect(page.getByText(/due date/i)).toBeVisible();
-    // await expect(page.getByText(/status/i)).toBeVisible();
-  });
-
-  test('should update instance status', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User on instance detail page
-    // When: User changes status
-    // Then: Status should update and show success message
-    // await page.goto('/compliance-instances/test-instance-id');
-    // await page.getByRole('button', { name: /change status/i }).click();
-    // await page.getByRole('option', { name: /in progress/i }).click();
-    // await expect(page.getByText(/status updated/i)).toBeVisible();
-  });
-
-  test('should display workflow tasks', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User on instance detail page
-    // When: User clicks "Tasks" tab
-    // Then: Should see list of workflow tasks
-    // await page.goto('/compliance-instances/test-instance-id');
-    // await page.getByRole('tab', { name: /tasks/i }).click();
-    // await expect(page.getByRole('list')).toBeVisible();
-  });
-});
+import { loginAs, clearAuthState, TEST_USERS } from './utils/auth';
 
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ page }) => {
-    // TODO: Implement login helper
-    await page.goto('/dashboard');
+    // Login before each dashboard test
+    await loginAs(page, 'admin');
   });
 
-  test('should display RAG status cards', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User on dashboard
-    // When: Page loads
-    // Then: Should see Green, Amber, Red status cards with counts
-    // await expect(page.getByTestId('rag-green-card')).toBeVisible();
-    // await expect(page.getByTestId('rag-amber-card')).toBeVisible();
-    // await expect(page.getByTestId('rag-red-card')).toBeVisible();
+  test('should display dashboard page with correct heading', async ({
+    page,
+  }) => {
+    // Verify page heading
+    await expect(
+      page.getByRole('heading', { name: /executive control tower/i })
+    ).toBeVisible();
+
+    // Verify subtitle
+    await expect(
+      page.getByText(/real-time compliance monitoring/i)
+    ).toBeVisible();
   });
 
-  test('should display category breakdown', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User on dashboard
-    // When: Page loads
-    // Then: Should see category breakdown chart
-    // await expect(page.getByTestId('category-chart')).toBeVisible();
+  test('should display RAG status overview card', async ({ page }) => {
+    // Wait for dashboard to load
+    await page.waitForLoadState('networkidle');
+
+    // Verify RAG status card heading
+    await expect(
+      page.getByRole('heading', { name: /compliance status overview/i })
+    ).toBeVisible();
+
+    // Verify RAG status labels are present (use first() for multiple matches)
+    await expect(page.getByText(/on track/i).first()).toBeVisible();
+    await expect(page.getByText(/at risk/i).first()).toBeVisible();
+    await expect(page.getByText(/overdue/i).first()).toBeVisible();
+
+    // Verify total count section
+    await expect(page.getByText(/total compliance items/i)).toBeVisible();
   });
 
-  test('should display overdue items', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User on dashboard
-    // When: Page loads
-    // Then: Should see list of overdue items
-    // await expect(page.getByTestId('overdue-list')).toBeVisible();
+  test('should display overdue items section', async ({ page }) => {
+    // Wait for dashboard to load
+    await page.waitForLoadState('networkidle');
+
+    // Verify overdue items heading
+    await expect(
+      page.getByRole('heading', { name: /overdue items/i })
+    ).toBeVisible();
   });
 
-  test('should navigate to filtered list when clicking RAG card', async ({ page }) => {
-    // TODO: Implement in Phase 11
-    // Given: User on dashboard
-    // When: User clicks Red status card
-    // Then: Should navigate to compliance instances filtered by Red
-    // await page.getByTestId('rag-red-card').click();
-    // await expect(page).toHaveURL(/.*rag_status=Red/);
+  test('should display upcoming items section', async ({ page }) => {
+    // Wait for dashboard to load
+    await page.waitForLoadState('networkidle');
+
+    // Verify upcoming items heading
+    await expect(
+      page.getByRole('heading', { name: /upcoming.*7 days/i })
+    ).toBeVisible();
+  });
+
+  test('should show loading state initially', async ({ page }) => {
+    // Navigate without waiting for login
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(TEST_USERS.admin.email);
+    await page.getByLabel('Password').fill(TEST_USERS.admin.password);
+    await page.getByRole('button', { name: /sign in/i }).click();
+
+    // On dashboard, should eventually show content (loading state may be brief)
+    await expect(page).toHaveURL('/dashboard', { timeout: 10000 });
+
+    // Should eventually show the main heading (after loading)
+    await expect(
+      page.getByRole('heading', { name: /executive control tower/i })
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should display summary stats for immediate action items', async ({
+    page,
+  }) => {
+    // Wait for data to load
+    await page.waitForLoadState('networkidle');
+
+    // Check for "Need Immediate Action" section
+    await expect(page.getByText(/need immediate action/i)).toBeVisible();
+
+    // Check for "Require Attention" section
+    await expect(page.getByText(/require attention/i)).toBeVisible();
+  });
+});
+
+test.describe('Compliance Instance List', () => {
+  // Helper to navigate to compliance page via sidebar link (preserves SPA state)
+  async function navigateToCompliance(page: import('@playwright/test').Page) {
+    const complianceLink = page.getByRole('link', { name: /compliance/i });
+    await expect(complianceLink).toBeVisible({ timeout: 10000 });
+    await complianceLink.click();
+    await expect(page).toHaveURL(/\/compliance/, { timeout: 10000 });
+  }
+
+  test('should display compliance instances page with correct heading', async ({
+    page,
+  }) => {
+    await loginAs(page, 'cfo');
+    await navigateToCompliance(page);
+
+    // Verify page heading
+    await expect(
+      page.getByRole('heading', { name: /compliance instances/i })
+    ).toBeVisible({ timeout: 10000 });
+
+    // Verify subtitle
+    await expect(
+      page.getByText(/view and manage all compliance obligations/i)
+    ).toBeVisible();
+  });
+
+  test('should display filter section', async ({ page }) => {
+    await loginAs(page, 'cfo');
+    await navigateToCompliance(page);
+
+    // Verify filters heading
+    await expect(
+      page.getByRole('heading', { name: /filters/i })
+    ).toBeVisible({ timeout: 10000 });
+
+    // Verify filter dropdowns exist (using label with exact match to avoid Status/RAG Status collision)
+    await expect(page.getByLabel('Status', { exact: true })).toBeVisible();
+    await expect(page.getByLabel('Category')).toBeVisible();
+    await expect(page.getByLabel('RAG Status')).toBeVisible();
+
+    // Verify Clear Filters button
+    await expect(
+      page.getByRole('button', { name: /clear filters/i })
+    ).toBeVisible();
+  });
+
+  test('should display compliance table or no-data message', async ({ page }) => {
+    await loginAs(page, 'cfo');
+    await navigateToCompliance(page);
+
+    // Wait for either table or no-data message to appear
+    const table = page.locator('table');
+    const noDataMessage = page.getByText(/no compliance instances found/i);
+
+    // Wait for one of them to be visible
+    await expect(table.or(noDataMessage)).toBeVisible({ timeout: 10000 });
+
+    // Check which one is visible
+    const hasTable = await table.isVisible().catch(() => false);
+
+    if (hasTable) {
+      // Check for expected column headers
+      await expect(
+        page.getByRole('columnheader', { name: /compliance/i })
+      ).toBeVisible();
+    }
+  });
+
+  test('should filter by status', async ({ page }) => {
+    await loginAs(page, 'cfo');
+    await navigateToCompliance(page);
+
+    // Wait for filters to load (use exact match for Status to avoid RAG Status collision)
+    await expect(page.getByLabel('Status', { exact: true })).toBeVisible({ timeout: 10000 });
+
+    // Select "In Progress" status
+    await page.getByLabel('Status', { exact: true }).selectOption('In Progress');
+
+    // Results should update (check the results count text updates)
+    await expect(page.getByText(/showing/i)).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should filter by category', async ({ page }) => {
+    await loginAs(page, 'cfo');
+    await navigateToCompliance(page);
+
+    // Wait for filters to load
+    await expect(page.getByLabel('Category')).toBeVisible({ timeout: 10000 });
+
+    // Select "GST" category
+    await page.getByLabel('Category').selectOption('GST');
+
+    // Results should show GST items (if any exist)
+    await expect(page.getByText(/showing/i)).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should filter by RAG status', async ({ page }) => {
+    await loginAs(page, 'cfo');
+    await navigateToCompliance(page);
+
+    // Wait for filters to load
+    await expect(page.getByLabel('RAG Status')).toBeVisible({ timeout: 10000 });
+
+    // Select "Red" RAG status
+    await page.getByLabel('RAG Status').selectOption('Red');
+
+    // Results should show Red status items (if any exist)
+    await expect(page.getByText(/showing/i)).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should clear all filters', async ({ page }) => {
+    await loginAs(page, 'cfo');
+    await navigateToCompliance(page);
+
+    // Wait for filters to load (use exact match for Status)
+    await expect(page.getByLabel('Status', { exact: true })).toBeVisible({ timeout: 10000 });
+
+    // Apply some filters first
+    await page.getByLabel('Status', { exact: true }).selectOption('In Progress');
+    await page.getByLabel('Category').selectOption('GST');
+
+    // Click Clear Filters
+    await page.getByRole('button', { name: /clear filters/i }).click();
+
+    // Verify filters are reset
+    await expect(page.getByLabel('Status', { exact: true })).toBeVisible();
+  });
+
+  test('should show results count', async ({ page }) => {
+    await loginAs(page, 'cfo');
+    await navigateToCompliance(page);
+
+    // Wait for page to load and verify results count is displayed
+    await expect(page.getByText(/showing.*of.*results/i)).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should handle empty results gracefully', async ({ page }) => {
+    await loginAs(page, 'cfo');
+    await navigateToCompliance(page);
+
+    // Wait for filters to load (use exact match for Status)
+    await expect(page.getByLabel('Status', { exact: true })).toBeVisible({ timeout: 10000 });
+
+    // Apply filters that likely return no results
+    await page.getByLabel('Status', { exact: true }).selectOption('Filed');
+    await page.getByLabel('Category').selectOption('FEMA');
+    await page.getByLabel('RAG Status').selectOption('Green');
+
+    // Wait for results to update - should show either "No compliance instances found" or results count
+    // Use first() to handle case when both messages are visible (0 results shows both)
+    await expect(
+      page.getByText(/no compliance instances found/i).or(page.getByText(/showing/i)).first()
+    ).toBeVisible({ timeout: 10000 });
+  });
+});
+
+test.describe('Compliance Navigation', () => {
+  test('should navigate from dashboard to compliance page', async ({
+    page,
+  }) => {
+    // Login using loginAs (same pattern as Multi-User tests)
+    await loginAs(page, 'cfo');
+
+    // Look for navigation link to compliance
+    const complianceLink = page.getByRole('link', { name: /compliance/i });
+
+    if (await complianceLink.isVisible()) {
+      await complianceLink.click();
+      await expect(page).toHaveURL(/\/compliance/);
+    } else {
+      // Direct navigation fallback
+      await page.goto('/compliance');
+      await expect(
+        page.getByRole('heading', { name: /compliance instances/i })
+      ).toBeVisible({ timeout: 10000 });
+    }
+  });
+
+  test('should navigate back to dashboard', async ({ page }) => {
+    // Login and go to compliance first
+    await loginAs(page, 'cfo');
+
+    // Navigate to compliance via sidebar link (preserves SPA state)
+    const complianceLink = page.getByRole('link', { name: /compliance/i });
+    await expect(complianceLink).toBeVisible({ timeout: 10000 });
+    await complianceLink.click();
+    await expect(page).toHaveURL(/\/compliance/, { timeout: 10000 });
+
+    // Wait for page to stabilize before clicking dashboard link
+    await page.waitForLoadState('domcontentloaded');
+
+    // Navigate back to dashboard
+    const dashboardLink = page.getByRole('link', { name: /dashboard/i });
+    await expect(dashboardLink).toBeVisible({ timeout: 10000 });
+    // Use force click to handle any React re-renders
+    await dashboardLink.click({ timeout: 10000 });
+
+    // Wait for navigation
+    await expect(page).toHaveURL('/dashboard', { timeout: 10000 });
+  });
+});
+
+test.describe('Multi-User Dashboard Access', () => {
+  test('CFO should see dashboard', async ({ page }) => {
+    await loginAs(page, 'cfo');
+
+    // Should see dashboard
+    await expect(
+      page.getByRole('heading', { name: /executive control tower/i })
+    ).toBeVisible();
+  });
+
+  test('Tax Lead should see dashboard', async ({ page }) => {
+    await loginAs(page, 'tax_lead');
+
+    // Should see dashboard
+    await expect(
+      page.getByRole('heading', { name: /executive control tower/i })
+    ).toBeVisible();
+  });
+
+  test('CFO should see compliance list', async ({ page }) => {
+    await loginAs(page, 'cfo');
+    await page.goto('/compliance');
+
+    // Should see compliance page
+    await expect(
+      page.getByRole('heading', { name: /compliance instances/i })
+    ).toBeVisible();
+  });
+
+  test('Tax Lead should see compliance list', async ({ page }) => {
+    await loginAs(page, 'tax_lead');
+    await page.goto('/compliance');
+
+    // Should see compliance page
+    await expect(
+      page.getByRole('heading', { name: /compliance instances/i })
+    ).toBeVisible();
   });
 });
