@@ -74,6 +74,16 @@ from app.schemas.evidence import (
     EvidenceListResponse,
     EvidenceDownloadResponse,
 )
+from app.schemas.notification import (
+    NotificationBase,
+    NotificationResponse,
+    NotificationListResponse,
+    NotificationCountResponse,
+    NotificationMarkReadRequest,
+    NotificationMarkReadResponse,
+    NotificationDeleteRequest,
+    NotificationDeleteResponse,
+)
 
 __all__ = [
     # Auth schemas
@@ -138,4 +148,13 @@ __all__ = [
     "EvidenceResponse",
     "EvidenceListResponse",
     "EvidenceDownloadResponse",
+    # Notification schemas
+    "NotificationBase",
+    "NotificationResponse",
+    "NotificationListResponse",
+    "NotificationCountResponse",
+    "NotificationMarkReadRequest",
+    "NotificationMarkReadResponse",
+    "NotificationDeleteRequest",
+    "NotificationDeleteResponse",
 ]

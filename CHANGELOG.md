@@ -7,16 +7,224 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for Phase 4 (Backend Business Logic)
-- Compliance Engine: Automated instance generation based on frequency rules
-- Workflow Engine: Task orchestration and dependency management
-- Due date calculation service
-- RAG status calculation service
-- Notification triggers for reminders
+### Planned for Phase 5 (Backend Background Jobs)
+- Celery scheduled tasks configuration
+- Automated compliance instance generation (daily cron)
+- RAG status recalculation (hourly cron)
+- Reminder notification tasks (T-3 days, due date, overdue)
+- Email notification integration (SendGrid)
 
 ---
 
-## [0.3.0] - 2025-12-20 - Phase 3 Complete: Backend CRUD Operations
+## [0.4.0] - 2024-12-20 - Phase 4 Complete: Backend Business Logic
+
+### Added
+
+#### Compliance Engine (`app/services/compliance_engine.py` - 591 lines)
+- **Due Date Calculation**
+  - `calculate_due_date()` - Calculates due dates from JSONB rule configuration
+  - Supports 5 rule types: Monthly, Quarterly, Annual, Fixed Date, Event-Based
+  - India FY calendar support (Apr-Mar fiscal year)
+  - Configurable offset days for each rule type
+
+- **Period Calculation**
+  - `calculate_period_for_frequency()` - Returns period start/end dates
+  - Monthly: Calendar month boundaries
+  - Quarterly: India FY quarters (Q1=Apr-Jun, Q2=Jul-Sep, Q3=Oct-Dec, Q4=Jan-Mar)
+  - Annual: Full fiscal year (Apr 1 - Mar 31)
+
+- **Instance Generation**
+  - `generate_instances_for_period()` - Creates instances for all entities
+  - Checks for existing instances to prevent duplicates
+  - Applies entity-specific configurations
+
+- **RAG Status Calculation**
+  - `calculate_rag_status()` - Determines compliance health status
+  - Green: On track (due date > 7 days away)
+  - Amber: At risk (due date ≤ 7 days)
+  - Red: Overdue or blocked by dependency
+  - Completed instances always return Green
+
+- **Dependency Resolution**
+  - `check_dependencies_met()` - Verifies blocking dependencies
+  - Prevents task progression when blockers exist
+
+#### Workflow Engine (`app/services/workflow_engine.py` - 596 lines)
+- **Standard Workflow Definition**
+  - `STANDARD_WORKFLOW` constant with 5-step process:
+    1. Prepare Documentation (Tax Lead, 3 days)
+    2. Review Submission (Tax Lead, 2 days)
+    3. CFO Approval (CFO, 2 days)
+    4. File with Authority (Tax Lead, 1 day)
+    5. Archive Evidence (Tax Lead, 1 day)
+
+- **Role Resolution**
+  - `resolve_role_to_user()` - Maps role names to tenant users
+  - Supports direct user assignment or role-based assignment
+
+- **Task Lifecycle Management**
+  - `create_workflow_tasks()` - Generates all tasks for an instance
+  - `start_task()` - Transitions Pending → In Progress
+  - `complete_task()` - Transitions In Progress → Completed
+  - `reject_task()` - Transitions In Progress → Rejected with reason
+
+- **Sequence Enforcement**
+  - Parent task validation before child can start/complete
+  - `check_instance_completion()` - Verifies all tasks completed
+
+- **Task Queries**
+  - `get_overdue_tasks()` - Tasks past due date
+  - `get_tasks_due_soon()` - Tasks due within N days
+  - `get_tasks_by_user()` - User's assigned tasks
+  - `get_tasks_by_instance()` - All tasks for an instance
+
+#### Notification Service (`app/services/notification_service.py` - 589 lines)
+- **Notification Types** (8 types)
+  - `task_assigned` - New task assignment
+  - `reminder_t3` - 3 days before due date
+  - `reminder_due` - On due date
+  - `overdue` - Past due date
+  - `approval_required` - Needs approval action
+  - `evidence_approved` - Evidence was approved
+  - `evidence_rejected` - Evidence was rejected
+  - `system` - System announcements
+
+- **CRUD Operations**
+  - `create_notification()` - Create in-app notification
+  - `get_user_notifications()` - List with pagination and filtering
+  - `get_notification_by_id()` - Get single notification
+  - `mark_notification_read()` - Mark single as read
+  - `mark_all_read()` - Mark all user's notifications as read
+  - `delete_notification()` - Delete single notification
+  - `delete_notifications()` - Bulk delete
+
+- **Notification Helpers**
+  - `notify_task_assigned()` - Task assignment notification
+  - `notify_reminder_t3()` - T-3 days reminder
+  - `notify_reminder_due()` - Due date reminder
+  - `notify_overdue_escalation()` - Escalation to approver
+
+#### Evidence Service (`app/services/evidence_service.py` - 598 lines)
+- **File Validation**
+  - `validate_file()` - Type and size validation
+  - 25 allowed extensions (PDF, Excel, Word, Images, CSV, ZIP, etc.)
+  - `EXTENSION_MIME_MAP` constant for type mapping
+  - Configurable max file size (default 25MB)
+
+- **Hash Generation**
+  - `generate_file_hash()` - SHA-256 hash for integrity
+  - Hash comparison for duplicate detection
+
+- **Approval Workflow**
+  - `approve_evidence()` - Sets approval status and immutability
+  - `reject_evidence()` - Rejects with reason
+  - Immutable evidence cannot be deleted or modified
+
+- **Versioning**
+  - `create_evidence_version()` - Creates new version
+  - Links to parent via `parent_evidence_id`
+  - Increments version number
+
+- **Directory Management**
+  - `get_evidence_directory()` - Constructs organized path
+  - Path format: `{base}/{tenant_id}/{entity_id}/{instance_id}/`
+
+#### Notifications API (`app/api/v1/endpoints/notifications.py`)
+- `GET /api/v1/notifications/` - List user's notifications
+- `GET /api/v1/notifications/count` - Get unread count
+- `GET /api/v1/notifications/{id}` - Get single notification
+- `PUT /api/v1/notifications/{id}/read` - Mark as read
+- `POST /api/v1/notifications/mark-all-read` - Mark all read
+- `DELETE /api/v1/notifications/{id}` - Delete notification
+- User isolation enforced on all endpoints
+
+### Testing
+
+#### Unit Tests (225 Phase 4 tests - 100% pass rate)
+
+**Compliance Engine Tests** (53 tests):
+- `test_compliance_engine.py`
+  - Due date calculation for all 5 rule types
+  - Period calculation for Monthly/Quarterly/Annual
+  - RAG status calculation (Green/Amber/Red thresholds)
+  - Dependency resolution and blocking logic
+  - Edge cases: empty rules, None values, fiscal year boundaries
+
+**Workflow Engine Tests** (60 tests):
+- `test_workflow_engine.py`
+  - STANDARD_WORKFLOW constant structure validation
+  - Role resolution to user mapping
+  - Task state transitions (start/complete/reject)
+  - Sequence enforcement (parent-child dependencies)
+  - Instance completion checks
+  - Task queries (overdue, due soon, by user/instance)
+  - Edge cases: whitespace reasons, custom dates
+
+**Notification Service Tests** (60 tests):
+- `test_notification_service.py`
+  - NotificationType constants verification
+  - CRUD operations with pagination
+  - Mark read (single and batch)
+  - Delete operations (single and bulk)
+  - Notification helpers (task_assigned, reminders, escalation)
+  - User isolation verification
+  - Edge cases: empty notifications, read counts
+
+**Evidence Service Tests** (52 tests):
+- `test_evidence_service.py`
+  - File validation (type, size)
+  - Hash generation (SHA-256 consistency)
+  - Approval/rejection workflow
+  - Immutability enforcement
+  - Versioning with parent linking
+  - Directory path construction
+  - Edge cases: large files, unknown extensions
+
+#### Integration Tests (27 tests - 100% pass rate)
+
+**Notifications API Tests**:
+- `test_notifications.py`
+  - List notifications with pagination
+  - Filter by unread status
+  - Get unread count
+  - Mark single notification as read
+  - Mark all notifications as read
+  - Delete notifications
+  - Multi-tenant isolation
+  - User isolation
+
+### Security
+
+- **Multi-Tenant Isolation**
+  - 101 tenant_id references across Phase 4 services
+  - All queries filter by tenant_id from JWT
+  - Cross-tenant access prevented at service layer
+
+- **Audit Logging Integration**
+  - 14 log_action calls in endpoint layer
+  - State changes logged with before/after values
+  - Approval/rejection actions tracked
+
+- **User Isolation**
+  - Notifications scoped to individual users
+  - Users cannot access other users' notifications
+  - Task assignments verified against user access
+
+### Statistics
+
+- **Code**: 4 service files (~2,374 lines production code)
+- **Tests**: 5 test files (~3,000 lines test code)
+- **Total Phase 4 Tests**: 252 tests (100% passing)
+- **Coverage**:
+  - notification_service.py: 100%
+  - workflow_engine.py: 98%
+  - evidence_service.py: 66%
+  - compliance_engine.py: 59%
+  - Average: 78%
+
+---
+
+## [0.3.0] - 2024-12-20 - Phase 3 Complete: Backend CRUD Operations
 
 ### Added
 
