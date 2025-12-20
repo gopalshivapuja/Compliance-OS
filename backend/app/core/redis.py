@@ -1,6 +1,7 @@
 """
 Redis connection for caching and sessions
 """
+
 import redis
 from typing import Optional
 from uuid import uuid4

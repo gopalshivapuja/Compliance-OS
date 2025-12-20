@@ -1,6 +1,7 @@
 """
 Background tasks for compliance operations
 """
+
 from app.celery_app import celery_app
 
 # TODO: Implement background tasks

@@ -3,6 +3,7 @@ Unit tests for Entity Access Control Service.
 Tests all functions for entity access management and role-based permissions.
 Includes multi-tenant isolation tests.
 """
+
 import pytest
 from sqlalchemy.orm import Session
 
@@ -197,7 +198,9 @@ def test_check_entity_access_denied(db_session, test_user, test_entities_with_ac
     assert result is False
 
 
-def test_check_entity_access_with_tenant_id(db_session, test_tenant, test_user, test_entities_with_access):
+def test_check_entity_access_with_tenant_id(
+    db_session, test_tenant, test_user, test_entities_with_access
+):
     """Test checking entity access with tenant_id validation."""
     entity1 = test_entities_with_access[0]
 
@@ -206,7 +209,9 @@ def test_check_entity_access_with_tenant_id(db_session, test_tenant, test_user, 
     assert result is True
 
 
-def test_check_entity_access_multi_tenant_isolation(db_session, test_tenant, test_user, test_entities_with_access):
+def test_check_entity_access_multi_tenant_isolation(
+    db_session, test_tenant, test_user, test_entities_with_access
+):
     """Test that entity access respects tenant boundaries."""
     entity1 = test_entities_with_access[0]
 
@@ -225,7 +230,9 @@ def test_check_entity_access_multi_tenant_isolation(db_session, test_tenant, tes
     assert result is False
 
 
-def test_get_user_accessible_entities(db_session, test_tenant, test_user, test_entities_with_access):
+def test_get_user_accessible_entities(
+    db_session, test_tenant, test_user, test_entities_with_access
+):
     """Test getting list of accessible entity IDs for a user."""
     entity1 = test_entities_with_access[0]
     entity2 = test_entities_with_access[1]
@@ -256,7 +263,9 @@ def test_get_user_accessible_entities_empty(db_session, test_tenant, test_entiti
     assert len(result) == 0
 
 
-def test_get_user_accessible_entities_multi_tenant(db_session, test_tenant, test_user, test_entities_with_access):
+def test_get_user_accessible_entities_multi_tenant(
+    db_session, test_tenant, test_user, test_entities_with_access
+):
     """Test that accessible entities respects tenant isolation."""
     # Create another tenant with entity
     other_tenant = Tenant(
@@ -403,7 +412,9 @@ def test_grant_entity_access_success(db_session, test_tenant, test_user, test_en
     assert check_entity_access(db_session, test_user.id, entity3.id) is True
 
 
-def test_grant_entity_access_duplicate(db_session, test_tenant, test_user, test_entities_with_access):
+def test_grant_entity_access_duplicate(
+    db_session, test_tenant, test_user, test_entities_with_access
+):
     """Test granting entity access when already exists."""
     entity1 = test_entities_with_access[0]  # Already has access
 
@@ -480,7 +491,9 @@ def test_get_entity_users_empty(db_session, test_tenant, test_entities_with_acce
     assert len(result) == 0
 
 
-def test_get_entity_users_multi_tenant_isolation(db_session, test_tenant, test_user, test_entities_with_access):
+def test_get_entity_users_multi_tenant_isolation(
+    db_session, test_tenant, test_user, test_entities_with_access
+):
     """Test that get_entity_users respects tenant boundaries."""
     entity1 = test_entities_with_access[0]
 

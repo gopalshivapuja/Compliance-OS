@@ -3,6 +3,7 @@ Integration tests for RBAC (Role-Based Access Control) enforcement.
 Tests that role-based permissions are correctly enforced across API endpoints.
 Includes entity-level access control and multi-tenant isolation tests.
 """
+
 import pytest
 from datetime import date, timedelta
 from fastapi.testclient import TestClient
@@ -286,7 +287,9 @@ def test_cfo_can_access_audit_logs(client: TestClient, db_session, test_tenant, 
     assert response.status_code in [200, 404, 500]  # Not 403
 
 
-def test_system_admin_can_access_audit_logs(client: TestClient, db_session, test_tenant, rbac_users):
+def test_system_admin_can_access_audit_logs(
+    client: TestClient, db_session, test_tenant, rbac_users
+):
     """Test that System Admin role can access audit logs endpoint."""
     headers = create_auth_headers(rbac_users["admin"], test_tenant)
 
@@ -477,7 +480,9 @@ def test_dashboard_respects_entity_access(
         assert data["total_compliances"] <= 1
 
 
-def test_unauthorized_user_cannot_access_protected_endpoints(client: TestClient, rbac_compliance_data):
+def test_unauthorized_user_cannot_access_protected_endpoints(
+    client: TestClient, rbac_compliance_data
+):
     """Test that requests without auth token are rejected."""
     # No auth headers
     response = client.get("/api/v1/compliance-instances")

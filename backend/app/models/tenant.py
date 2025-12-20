@@ -1,6 +1,7 @@
 """
 Tenant model for multi-tenant isolation
 """
+
 from sqlalchemy import Column, String, Boolean, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship

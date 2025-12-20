@@ -1,6 +1,7 @@
 """
 Models package - imports all models for Alembic discovery
 """
+
 from app.models.base import Base
 
 # Import all models so Alembic can discover them

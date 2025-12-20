@@ -1,6 +1,7 @@
 """
 Entity model for legal entities (companies, branches)
 """
+
 from sqlalchemy import Column, String, Text, ForeignKey, Table
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship

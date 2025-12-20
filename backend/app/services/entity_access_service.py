@@ -2,6 +2,7 @@
 Entity Access Control Service
 Handles user permissions to entities and role-based access control (RBAC).
 """
+
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from sqlalchemy import select

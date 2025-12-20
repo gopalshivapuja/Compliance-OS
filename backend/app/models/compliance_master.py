@@ -1,6 +1,7 @@
 """
 Compliance Master model - templates/definitions of compliance obligations
 """
+
 from sqlalchemy import Column, String, Text, Boolean, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from sqlalchemy.orm import relationship

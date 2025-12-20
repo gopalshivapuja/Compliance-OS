@@ -1,6 +1,7 @@
 """
 Security utilities for authentication and authorization
 """
+
 from datetime import datetime, timedelta
 from typing import Optional
 from uuid import uuid4

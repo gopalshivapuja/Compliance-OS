@@ -463,7 +463,7 @@ BEGIN
             v_tenant_id := OLD.tenant_id;
             v_resource_id := OLD.task_id;
         END IF;
-        
+
         INSERT INTO audit_logs (
             tenant_id, user_id, entity_id,
             action_type, resource_type, resource_id,
@@ -496,7 +496,7 @@ $$ LANGUAGE plpgsql;
 -- View: Compliance Instance with Master Details
 -- Makes it easy to query instances with their master compliance info
 CREATE OR REPLACE VIEW v_compliance_instances_detail AS
-SELECT 
+SELECT
     ci.compliance_instance_id,
     ci.entity_id,
     ci.tenant_id,
@@ -528,7 +528,7 @@ LEFT JOIN users u_approver ON ci.approver_user_id = u_approver.user_id;
 -- View: Overdue Compliance Instances
 -- Quick view of all overdue items
 CREATE OR REPLACE VIEW v_overdue_compliance AS
-SELECT 
+SELECT
     ci.*,
     cm.compliance_name,
     cm.category,
@@ -543,7 +543,7 @@ WHERE ci.status NOT IN ('Completed', 'Filed', 'Cancelled')
 -- View: Evidence Summary by Compliance Instance
 -- Shows evidence count and approval status per instance
 CREATE OR REPLACE VIEW v_evidence_summary AS
-SELECT 
+SELECT
     compliance_instance_id,
     COUNT(*) AS total_evidence_count,
     COUNT(*) FILTER (WHERE approval_status = 'Approved') AS approved_count,
@@ -569,4 +569,3 @@ COMMENT ON COLUMN compliance_instances.tenant_id IS 'Denormalized for performanc
 COMMENT ON COLUMN workflow_tasks.tenant_id IS 'Denormalized for performance: avoids joins in tenant-scoped queries';
 COMMENT ON COLUMN evidence.tenant_id IS 'Denormalized for performance: avoids joins in tenant-scoped queries';
 COMMENT ON COLUMN evidence.is_immutable IS 'Once approved, evidence cannot be deleted to maintain audit integrity';
-

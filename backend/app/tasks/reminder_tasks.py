@@ -1,6 +1,7 @@
 """
 Background tasks for reminders and notifications
 """
+
 from app.celery_app import celery_app
 
 # TODO: Implement reminder tasks

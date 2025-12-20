@@ -147,4 +147,3 @@ const { data } = await complianceInstancesApi.list({
 6. Add charts/visualizations for RAG status
 7. Implement filtering and search
 8. Add error boundaries and loading states
-

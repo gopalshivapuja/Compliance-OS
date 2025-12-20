@@ -93,4 +93,3 @@ export interface AuditLog {
   resource_id: string
   created_at: string
 }
-

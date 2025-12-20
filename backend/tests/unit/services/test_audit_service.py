@@ -2,6 +2,7 @@
 Unit tests for audit service.
 Tests immutable audit logging functionality.
 """
+
 import pytest
 from datetime import datetime
 from sqlalchemy.orm import Session
@@ -50,7 +51,9 @@ async def test_log_action_creates_audit_log(db_session: Session, test_tenant, te
 
 
 @pytest.mark.asyncio
-async def test_log_action_update_with_old_and_new_values(db_session: Session, test_tenant, test_user):
+async def test_log_action_update_with_old_and_new_values(
+    db_session: Session, test_tenant, test_user
+):
     """Test logging UPDATE action with before/after snapshots."""
     tenant_id = str(test_tenant.id)
     user_id = str(test_user.id)

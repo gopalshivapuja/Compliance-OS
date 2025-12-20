@@ -1,6 +1,7 @@
 """
 Audit Log Pydantic schemas for request/response validation
 """
+
 from datetime import datetime
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field

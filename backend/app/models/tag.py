@@ -1,6 +1,7 @@
 """
 Tag model for categorizing evidence and other resources
 """
+
 from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship

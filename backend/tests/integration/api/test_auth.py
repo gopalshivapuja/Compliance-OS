@@ -2,6 +2,7 @@
 Integration tests for authentication endpoints.
 Tests login, refresh, logout, and /me endpoints with real database.
 """
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -189,9 +190,7 @@ def test_refresh_token_invalid(client: TestClient, test_tenant_with_user):
     assert "Invalid or expired" in response.json()["detail"]
 
 
-def test_refresh_token_old_token_invalidated(
-    client: TestClient, test_tenant_with_user
-):
+def test_refresh_token_old_token_invalidated(client: TestClient, test_tenant_with_user):
     """Test that old refresh token is invalidated after refresh."""
     # Login to get tokens
     login_response = client.post(
@@ -310,10 +309,14 @@ def test_login_creates_audit_log(client: TestClient, test_tenant_with_user, db_s
     )
 
     # Check audit log was created
-    audit_log = db_session.query(AuditLog).filter(
-        AuditLog.action_type == "LOGIN",
-        AuditLog.resource_type == "user",
-    ).first()
+    audit_log = (
+        db_session.query(AuditLog)
+        .filter(
+            AuditLog.action_type == "LOGIN",
+            AuditLog.resource_type == "user",
+        )
+        .first()
+    )
 
     assert audit_log is not None
     assert audit_log.user_id == str(test_tenant_with_user["user"].id)
@@ -343,10 +346,14 @@ def test_logout_creates_audit_log(client: TestClient, test_tenant_with_user, db_
     )
 
     # Check audit log was created
-    audit_log = db_session.query(AuditLog).filter(
-        AuditLog.action_type == "LOGOUT",
-        AuditLog.resource_type == "user",
-    ).first()
+    audit_log = (
+        db_session.query(AuditLog)
+        .filter(
+            AuditLog.action_type == "LOGOUT",
+            AuditLog.resource_type == "user",
+        )
+        .first()
+    )
 
     assert audit_log is not None
     assert audit_log.user_id == str(test_tenant_with_user["user"].id)

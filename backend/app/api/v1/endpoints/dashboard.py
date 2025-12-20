@@ -1,6 +1,7 @@
 """
 Dashboard endpoints for aggregated views
 """
+
 from datetime import date, timedelta
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, and_, or_

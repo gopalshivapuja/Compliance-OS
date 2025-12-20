@@ -28,4 +28,3 @@ export function RAGBadge({ status, className }: RAGBadgeProps) {
     </span>
   )
 }
-

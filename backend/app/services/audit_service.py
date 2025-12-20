@@ -4,6 +4,7 @@ Handles immutable audit logging for all system actions.
 
 Core principle: "If it cannot stand up to an auditor, it does not ship."
 """
+
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError

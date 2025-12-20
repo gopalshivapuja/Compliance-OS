@@ -1,6 +1,7 @@
 """
 Audit Log endpoints - Read-only, CFO and System Admin access only
 """
+
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Optional

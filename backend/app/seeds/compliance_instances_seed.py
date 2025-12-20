@@ -1,6 +1,7 @@
 """
 Seed script to generate test compliance instances with varied RAG statuses
 """
+
 import uuid
 from datetime import date, timedelta
 from sqlalchemy.orm import Session

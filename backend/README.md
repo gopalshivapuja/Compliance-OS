@@ -180,4 +180,3 @@ Once the server is running, visit:
 - Use strong passwords for database
 - Enable rate limiting in production
 - Review CORS origins before deployment
-

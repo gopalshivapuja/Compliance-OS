@@ -1,6 +1,7 @@
 """
 Unit tests for Redis refresh token management.
 """
+
 import pytest
 from uuid import uuid4
 from unittest.mock import Mock, patch, MagicMock
@@ -38,12 +39,8 @@ async def test_store_refresh_token_with_custom_token():
 
         assert token == custom_token
         # Verify correct keys were set
-        mock_redis.setex.assert_any_call(
-            f"refresh_token:{custom_token}", 604800, user_id
-        )
-        mock_redis.setex.assert_any_call(
-            f"user_refresh:{user_id}", 604800, custom_token
-        )
+        mock_redis.setex.assert_any_call(f"refresh_token:{custom_token}", 604800, user_id)
+        mock_redis.setex.assert_any_call(f"user_refresh:{user_id}", 604800, custom_token)
 
 
 @pytest.mark.asyncio

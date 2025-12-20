@@ -1,6 +1,7 @@
 """
 User model for authentication and authorization
 """
+
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship

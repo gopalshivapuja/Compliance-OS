@@ -1,6 +1,7 @@
 """
 Base model classes and mixins for all database models
 """
+
 from datetime import datetime
 from uuid import UUID, uuid4
 from sqlalchemy import Column, DateTime, String

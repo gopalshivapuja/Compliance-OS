@@ -1,6 +1,7 @@
 """
 Compliance Instance model - time-bound occurrences of compliance obligations
 """
+
 from sqlalchemy import Column, String, Text, Date, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship

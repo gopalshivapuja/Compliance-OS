@@ -1,6 +1,7 @@
 """
 Notification model for in-app notifications
 """
+
 from sqlalchemy import Column, String, Text, Boolean, DateTime, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship

@@ -24,8 +24,7 @@ from app.core.security import get_password_hash
 # PostgreSQL test database URL
 # Use separate test database on your existing PostgreSQL server
 TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL",
-    "postgresql://gopal@localhost:5432/compliance_os_test"
+    "TEST_DATABASE_URL", "postgresql://gopal@localhost:5432/compliance_os_test"
 )
 
 # Create test engine with PostgreSQL

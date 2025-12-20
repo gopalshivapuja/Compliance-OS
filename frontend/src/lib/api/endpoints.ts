@@ -135,4 +135,3 @@ export const dashboardApi = {
   getOwnerHeatmap: () => apiClient.get('/dashboard/owner-heatmap'),
   getCategoryBreakdown: () => apiClient.get('/dashboard/category-breakdown'),
 }
-

@@ -1,6 +1,7 @@
 """
 Workflow Task model for compliance workflow management
 """
+
 from sqlalchemy import Column, String, Text, Date, Integer, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship

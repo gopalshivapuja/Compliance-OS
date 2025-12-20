@@ -3,6 +3,7 @@ Integration tests for Dashboard endpoints.
 Tests overview, overdue, upcoming, and category breakdown endpoints.
 Includes multi-tenant isolation, RAG aggregation, and pagination tests.
 """
+
 import pytest
 from datetime import date, timedelta
 from fastapi.testclient import TestClient
@@ -108,7 +109,9 @@ def test_compliance_masters(db_session, test_tenant):
 
 
 @pytest.fixture
-def test_compliance_instances(db_session, test_tenant, test_entities, test_compliance_masters, test_user):
+def test_compliance_instances(
+    db_session, test_tenant, test_entities, test_compliance_masters, test_user
+):
     """Create test compliance instances with various statuses and RAG colors."""
     today = date.today()
     instances = []

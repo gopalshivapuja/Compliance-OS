@@ -1,6 +1,7 @@
 """
 Seed runner script to populate initial data
 """
+
 import sys
 from sqlalchemy.orm import Session
 from app.core.database import engine, SessionLocal

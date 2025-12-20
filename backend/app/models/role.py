@@ -1,6 +1,7 @@
 """
 Role model for RBAC (Role-Based Access Control)
 """
+
 from sqlalchemy import Column, String, Text, Table, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship

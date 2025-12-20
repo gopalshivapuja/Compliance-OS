@@ -1,6 +1,7 @@
 """
 Compliance Instance management endpoints
 """
+
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -333,9 +334,11 @@ async def update_compliance_instance(
         resource_id=instance.id,
         old_values=old_values,
         new_values=new_values,
-        change_summary=f"Updated compliance instance: {', '.join(changes)}"
-        if changes
-        else "Updated compliance instance",
+        change_summary=(
+            f"Updated compliance instance: {', '.join(changes)}"
+            if changes
+            else "Updated compliance instance"
+        ),
     )
 
     # Return updated instance
