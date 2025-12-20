@@ -40,6 +40,40 @@ from app.schemas.tenant import (
     TenantResponse,
     TenantListResponse,
 )
+from app.schemas.entity import (
+    EntityBase,
+    EntityCreate,
+    EntityUpdate,
+    EntityResponse,
+    EntityListResponse,
+)
+from app.schemas.compliance_master import (
+    ComplianceMasterBase,
+    ComplianceMasterCreate,
+    ComplianceMasterUpdate,
+    ComplianceMasterResponse,
+    ComplianceMasterListResponse,
+    ComplianceMasterBulkImportRequest,
+    ComplianceMasterBulkImportResponse,
+)
+from app.schemas.workflow_task import (
+    WorkflowTaskBase,
+    WorkflowTaskCreate,
+    WorkflowTaskUpdate,
+    WorkflowTaskActionRequest,
+    WorkflowTaskRejectRequest,
+    WorkflowTaskResponse,
+    WorkflowTaskListResponse,
+)
+from app.schemas.evidence import (
+    EvidenceBase,
+    EvidenceUploadRequest,
+    EvidenceApprovalRequest,
+    EvidenceRejectionRequest,
+    EvidenceResponse,
+    EvidenceListResponse,
+    EvidenceDownloadResponse,
+)
 
 __all__ = [
     # Auth schemas
@@ -74,4 +108,34 @@ __all__ = [
     "TenantUpdate",
     "TenantResponse",
     "TenantListResponse",
+    # Entity schemas
+    "EntityBase",
+    "EntityCreate",
+    "EntityUpdate",
+    "EntityResponse",
+    "EntityListResponse",
+    # Compliance Master schemas
+    "ComplianceMasterBase",
+    "ComplianceMasterCreate",
+    "ComplianceMasterUpdate",
+    "ComplianceMasterResponse",
+    "ComplianceMasterListResponse",
+    "ComplianceMasterBulkImportRequest",
+    "ComplianceMasterBulkImportResponse",
+    # Workflow Task schemas
+    "WorkflowTaskBase",
+    "WorkflowTaskCreate",
+    "WorkflowTaskUpdate",
+    "WorkflowTaskActionRequest",
+    "WorkflowTaskRejectRequest",
+    "WorkflowTaskResponse",
+    "WorkflowTaskListResponse",
+    # Evidence schemas
+    "EvidenceBase",
+    "EvidenceUploadRequest",
+    "EvidenceApprovalRequest",
+    "EvidenceRejectionRequest",
+    "EvidenceResponse",
+    "EvidenceListResponse",
+    "EvidenceDownloadResponse",
 ]

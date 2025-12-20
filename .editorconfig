@@ -14,7 +14,7 @@ indent_style = space
 # Python files
 [*.{py,pyi}]
 indent_size = 4
-max_line_length = 120
+max_line_length = 100
 
 # JavaScript/TypeScript files
 [*.{js,jsx,ts,tsx,mjs,cjs}]

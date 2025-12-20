@@ -1,0 +1,31 @@
+# Prettier Ignore File
+# Exclude large documentation files to prevent pre-commit hook timeout
+
+# Large documentation files that don't need formatting
+IMPLEMENTATION_PLAN.md
+PROGRESS.md
+CHANGELOG.md
+PHASE_3_STARTUP.md
+PRD.md
+ARCHITECTURE.md
+ARCHITECTURE_DIAGRAM.md
+SCHEMA_DESIGN.md
+GIT_BEST_PRACTICES.md
+DEPLOYMENT_PLAN.md
+DEPLOYMENT_STRATEGY.md
+CONTRIBUTING.md
+SECURITY.md
+
+# Archive docs (checkpoint files are historical records)
+docs/archive/**/*.md
+
+# Generated/lock files
+package-lock.json
+frontend/package-lock.json
+
+# Build outputs
+.next/
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/

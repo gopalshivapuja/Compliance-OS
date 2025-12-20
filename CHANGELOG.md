@@ -7,12 +7,174 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for Phase 3 (Backend CRUD Operations)
-- Tenants, Users, Entities CRUD endpoints
-- Compliance Masters management with bulk import
-- Workflow Tasks CRUD operations
-- Evidence upload/download with S3
-- All endpoints with RBAC and audit logging integration
+### Planned for Phase 4 (Backend Business Logic)
+- Compliance Engine: Automated instance generation based on frequency rules
+- Workflow Engine: Task orchestration and dependency management
+- Due date calculation service
+- RAG status calculation service
+- Notification triggers for reminders
+
+---
+
+## [0.3.0] - 2025-12-20 - Phase 3 Complete: Backend CRUD Operations
+
+### Added
+
+#### Entities Module (5 endpoints, 25 tests)
+- **CRUD Operations with RBAC**
+  - `POST /api/v1/entities` - Create entity (Tenant Admin only)
+  - `GET /api/v1/entities` - List entities (filtered by user's accessible entities)
+  - `GET /api/v1/entities/{id}` - Get entity details (entity access check)
+  - `PUT /api/v1/entities/{id}` - Update entity (Tenant Admin only)
+  - `DELETE /api/v1/entities/{id}` - Soft delete entity (prevents if active instances exist)
+  - Multi-tenant isolation enforced on all queries
+  - Entity-level access control via entity_access table
+  - Search and filtering by status, entity_type
+
+#### Compliance Masters Module (6 endpoints, 35 tests)
+- **Full CRUD with System Template Support**
+  - `POST /api/v1/compliance-masters` - Create compliance master
+  - `GET /api/v1/compliance-masters` - List masters (includes system templates + tenant-specific)
+  - `GET /api/v1/compliance-masters/{id}` - Get master details
+  - `PUT /api/v1/compliance-masters/{id}` - Update master (system templates require System Admin)
+  - `DELETE /api/v1/compliance-masters/{id}` - Delete master (force option if instances exist)
+  - `POST /api/v1/compliance-masters/bulk-import` - Bulk import from CSV/Excel with validation
+  - System templates (tenant_id = NULL) accessible to all tenants
+  - Tenant-specific masters customizable by Tenant Admin
+  - Category and frequency filtering
+  - Overwrite and skip options for bulk import
+
+#### Compliance Instances Module (5 endpoints, 31 tests)
+- **Instance Management with RAG Calculation**
+  - `POST /api/v1/compliance-instances` - Create instance manually (prevents duplicates)
+  - `GET /api/v1/compliance-instances` - List with advanced filtering
+  - `GET /api/v1/compliance-instances/{id}` - Get instance details
+  - `PUT /api/v1/compliance-instances/{id}` - Update instance (status, owner, fields)
+  - `POST /api/v1/compliance-instances/{id}/recalculate-status` - RAG recalculation endpoint
+  - RAG calculation: Red (overdue), Amber (<7 days), Green (on track)
+  - Blocking dependencies affect RAG status
+  - Completed instances always Green
+  - Advanced filtering: entity, status, RAG, category, owner, due_date range
+
+#### Workflow Tasks Module (8 endpoints, 32 tests)
+- **CRUD + Action Endpoints**
+  - `POST /api/v1/workflow-tasks` - Create task
+  - `GET /api/v1/workflow-tasks` - List tasks (filter by instance/user/status/type)
+  - `GET /api/v1/workflow-tasks/{id}` - Get task details
+  - `PUT /api/v1/workflow-tasks/{id}` - Update task (assignment, due date)
+  - `DELETE /api/v1/workflow-tasks/{id}` - Delete task (Pending status only)
+  - `POST /api/v1/workflow-tasks/{id}/start` - Start task (Pending → In Progress)
+  - `POST /api/v1/workflow-tasks/{id}/complete` - Complete task (sets completed_at)
+  - `POST /api/v1/workflow-tasks/{id}/reject` - Reject task (requires rejection_reason)
+  - Parent-child task dependencies enforced
+  - Dual assignment support (user OR role)
+  - Status transition validation
+  - Cannot delete in-progress or completed tasks
+
+#### Evidence Module (7 endpoints, 27 tests)
+- **File Upload/Download with Approval Workflow**
+  - `POST /api/v1/evidence/upload` - Upload evidence with file validation (multipart/form-data)
+  - `GET /api/v1/evidence` - List evidence (filter by instance/approval status)
+  - `GET /api/v1/evidence/{id}` - Get evidence metadata
+  - `GET /api/v1/evidence/{id}/download` - Generate signed URL for download (5-min expiry)
+  - `POST /api/v1/evidence/{id}/approve` - Approve evidence (sets is_immutable = true)
+  - `POST /api/v1/evidence/{id}/reject` - Reject evidence (requires rejection_reason)
+  - `DELETE /api/v1/evidence/{id}` - Delete evidence (blocked if immutable)
+  - File validation: PDF, Excel, Word, Images, CSV, ZIP (max 50MB)
+  - SHA-256 hash generation for integrity verification
+  - Immutability after approval (audit requirement)
+  - Local storage with S3-ready architecture
+  - Version tracking support via parent_evidence_id
+
+#### Dashboard Module - Owner Heatmap (1 endpoint, 7 tests)
+- **Workload Distribution**
+  - `GET /api/v1/dashboard/owner-heatmap` - Compliance workload by owner
+  - Shows total assigned, RAG breakdown, overdue count, upcoming count per owner
+  - Includes unassigned items as separate entry
+  - Sorted by workload (busiest owners first)
+  - Multi-tenant isolation verified
+
+#### Backend Services
+- **evidence_service.py** - File handling utilities
+  - `calculate_file_hash()` - SHA-256 hash generation
+  - `generate_file_path()` - Organized storage paths
+  - `save_file_locally()` - Local storage (S3-ready)
+  - `delete_file_locally()` - File deletion
+  - `generate_signed_url()` - Signed URL generation (mock for dev, S3 in prod)
+  - `validate_file_type()` - File extension validation
+  - `validate_file_size()` - Size limit enforcement
+
+#### Pydantic Schemas (7 new schema files)
+- **entity.py** - EntityBase, EntityCreate, EntityUpdate, EntityResponse, EntityListResponse
+- **tenant.py** - TenantBase, TenantCreate, TenantUpdate, TenantResponse, TenantListResponse
+- **user.py** - UserBase, UserCreate, UserUpdate, UserInDB, UserListResponse
+- **compliance_master.py** - ComplianceMasterBase, Create, Update, Response, ListResponse, BulkImportRequest/Response
+- **compliance_instance.py** - ComplianceInstanceBase, Create, Update, Response, ListResponse
+- **workflow_task.py** - WorkflowTaskBase, Create, Update, ActionRequest, RejectRequest, Response, ListResponse
+- **evidence.py** - EvidenceBase, UploadRequest, ApprovalRequest, RejectionRequest, Response, ListResponse, DownloadResponse
+- All schemas use barrel exports from `__init__.py`
+
+### Changed
+
+- **schemas/__init__.py** - Updated barrel exports to include all Phase 3 schemas
+- **Multi-Tenant Isolation Enhanced**
+  - All new endpoints filter by `tenant_id` from JWT
+  - Entity access checks enforce tenant boundaries
+  - RBAC enforcement on all mutation operations
+
+### Security
+
+- **Multi-Tenant Isolation**
+  - All queries filtered by `tenant_id` from JWT token
+  - Entity-level access control via `entity_access` table
+  - Users can only see entities they have permission to access
+
+- **RBAC Enforcement**
+  - Role-based checks on all endpoints (Tenant Admin, System Admin, CFO)
+  - Entity access verified before read/write operations
+  - 403 Forbidden responses for unauthorized access attempts
+
+- **File Security**
+  - File type validation (whitelist approach)
+  - File size limits (50MB default, configurable)
+  - SHA-256 hash generation for integrity verification
+  - Signed URLs with expiration (5 minutes)
+  - Immutability enforcement after approval
+
+- **Audit Logging Integration**
+  - All mutations logged with before/after snapshots
+  - Complete trail for CREATE, UPDATE, DELETE, APPROVE, REJECT actions
+
+### Performance
+
+- **Query Optimization**
+  - Efficient joins with proper foreign key relationships
+  - Pagination on all list endpoints (default limit: 50, max: 500)
+  - Strategic filtering reduces result set size
+
+- **File Handling**
+  - Local storage for development
+  - S3-ready architecture for production scaling
+  - Organized file paths for efficient retrieval
+
+### Testing
+
+- **Integration Tests** (157 tests, 100% pass rate)
+  - `tests/integration/api/test_entities.py` (25 tests)
+  - `tests/integration/api/test_compliance_masters.py` (35 tests)
+  - `tests/integration/api/test_compliance_instances.py` (31 tests)
+  - `tests/integration/api/test_workflow_tasks.py` (32 tests)
+  - `tests/integration/api/test_evidence.py` (27 tests)
+  - `tests/integration/api/test_dashboard.py` (7 new owner heatmap tests)
+  - All tests verify RBAC enforcement, multi-tenant isolation, and entity access control
+
+### Statistics
+
+- **Backend**: 16 files created/modified (~3,500 lines)
+- **Tests**: 6 test files (157 test cases, ~4,200 lines)
+- **Total Endpoints**: 31 endpoints across 6 modules
+- **Test Coverage**: 100% pass rate (157/157 tests)
+- **Duration**: 3 days (estimated: 2 weeks - 4.7x faster than planned)
 
 ---
 

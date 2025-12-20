@@ -34,7 +34,7 @@ jobs:
 
       - name: Lint with Flake8
         working-directory: ./backend
-        run: flake8 app/ --max-line-length=120 --exclude=__pycache__,*.pyc
+        run: flake8 app/ --max-line-length=100 --exclude=__pycache__,*.pyc
 
       - name: Type check with MyPy
         working-directory: ./backend
