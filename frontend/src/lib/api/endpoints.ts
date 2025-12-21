@@ -135,3 +135,18 @@ export const dashboardApi = {
   getOwnerHeatmap: () => apiClient.get('/dashboard/owner-heatmap'),
   getCategoryBreakdown: () => apiClient.get('/dashboard/category-breakdown'),
 }
+
+// Notification endpoints
+export const notificationsApi = {
+  list: (params?: { is_read?: boolean; skip?: number; limit?: number }) =>
+    apiClient.get('/notifications', { params }),
+  getCount: () => apiClient.get('/notifications/count'),
+  get: (id: string) => apiClient.get(`/notifications/${id}`),
+  markRead: (id: string) => apiClient.put(`/notifications/${id}/read`),
+  markMultipleRead: (notificationIds: string[]) =>
+    apiClient.post('/notifications/mark-read', { notification_ids: notificationIds }),
+  markAllRead: () => apiClient.post('/notifications/mark-all-read'),
+  delete: (id: string) => apiClient.delete(`/notifications/${id}`),
+  deleteMultiple: (notificationIds: string[]) =>
+    apiClient.delete('/notifications', { data: { notification_ids: notificationIds } }),
+}

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/auth-store'
 import { useToast } from '@/components/ui/Toast'
 import { authApi } from '@/lib/api/endpoints'
+import { NotificationsBell } from './NotificationsBell'
 
 export function Header() {
   const router = useRouter()
@@ -52,8 +53,12 @@ export function Header() {
             </div>
           </div>
 
-          {/* User Menu */}
-          <div className="relative">
+          {/* Notifications & User Menu */}
+          <div className="flex items-center gap-2">
+            <NotificationsBell />
+
+            {/* User Menu */}
+            <div className="relative">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors"
@@ -128,6 +133,7 @@ export function Header() {
                 </div>
               </>
             )}
+            </div>
           </div>
         </div>
       </div>

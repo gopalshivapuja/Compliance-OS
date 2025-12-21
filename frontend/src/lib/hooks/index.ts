@@ -21,3 +21,13 @@ export {
   useResourceAuditTrail,
   useAuditLog,
 } from './useAuditLogs'
+
+// Notification hooks
+export {
+  useNotificationCount,
+  useNotifications,
+  useRecentNotifications,
+  useMarkNotificationRead,
+  useMarkMultipleRead,
+  useMarkAllRead,
+} from './useNotifications'
