@@ -3,7 +3,6 @@ Create a test user for manual testing
 Run this script to create a test user that you can use to login to the application.
 """
 
-from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.models import Tenant, User, Role, user_roles, Entity, entity_access
 from app.core.security import get_password_hash
@@ -59,7 +58,7 @@ def create_test_data():
                 "email": "admin@testgcc.com",
                 "first_name": "System",
                 "last_name": "Admin",
-                "password": "Admin123!",
+                "password": "Admin123!",  # pragma: allowlist secret
                 "role": system_admin_role,
                 "role_name": "System Admin",
             },
@@ -67,7 +66,7 @@ def create_test_data():
                 "email": "cfo@testgcc.com",
                 "first_name": "Chief",
                 "last_name": "Financial Officer",
-                "password": "CFO123!",
+                "password": "CFO12345!",  # pragma: allowlist secret
                 "role": cfo_role,
                 "role_name": "CFO",
             },
@@ -75,7 +74,7 @@ def create_test_data():
                 "email": "tax@testgcc.com",
                 "first_name": "Tax",
                 "last_name": "Lead",
-                "password": "Tax123!",
+                "password": "Tax12345!",  # pragma: allowlist secret
                 "role": tax_lead_role,
                 "role_name": "Tax Lead",
             },
@@ -132,9 +131,7 @@ def create_test_data():
         for entity_data in entities_to_create:
             existing_entity = (
                 db.query(Entity)
-                .filter(
-                    Entity.entity_code == entity_data["entity_code"], Entity.tenant_id == tenant.id
-                )
+                .filter(Entity.entity_code == entity_data["entity_code"], Entity.tenant_id == tenant.id)
                 .first()
             )
             if existing_entity:
@@ -191,12 +188,12 @@ def create_test_data():
         print()
         print("2. CFO:")
         print("   Email:    cfo@testgcc.com")
-        print("   Password: CFO123!")
+        print("   Password: CFO12345!")
         print("   Access:   Can approve, view audit logs")
         print()
         print("3. Tax Lead:")
         print("   Email:    tax@testgcc.com")
-        print("   Password: Tax123!")
+        print("   Password: Tax12345!")
         print("   Access:   Can manage compliance instances")
         print()
         print("Frontend: http://localhost:3000/login")

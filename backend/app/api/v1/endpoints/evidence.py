@@ -49,7 +49,8 @@ STORAGE_PATH = Path("storage/evidence")
 def _check_entity_access(db: Session, user: dict, entity_id: UUID, tenant_id: UUID) -> bool:
     """Check if user has access to an entity."""
     # Admins have access to all entities
-    if "admin" in user.get("roles", []):
+    user_roles = user.get("roles", [])
+    if "SYSTEM_ADMIN" in user_roles or "TENANT_ADMIN" in user_roles:
         return True
 
     # Check entity_access table
@@ -77,13 +78,9 @@ def _build_evidence_response(evidence: Evidence, db: Session) -> dict:
         "file_size": evidence.file_size,
         "file_hash": evidence.file_hash,
         "version": evidence.version,
-        "parent_evidence_id": (
-            str(evidence.parent_evidence_id) if evidence.parent_evidence_id else None
-        ),
+        "parent_evidence_id": (str(evidence.parent_evidence_id) if evidence.parent_evidence_id else None),
         "approval_status": evidence.approval_status,
-        "approved_by_user_id": (
-            str(evidence.approved_by_user_id) if evidence.approved_by_user_id else None
-        ),
+        "approved_by_user_id": (str(evidence.approved_by_user_id) if evidence.approved_by_user_id else None),
         "approved_at": evidence.approved_at,
         "approval_remarks": evidence.approval_remarks,
         "rejection_reason": evidence.rejection_reason,
@@ -119,9 +116,7 @@ def _build_evidence_response(evidence: Evidence, db: Session) -> dict:
 
     # Get approved by user name
     if evidence.approved_by:
-        response["approved_by_name"] = (
-            f"{evidence.approved_by.first_name} {evidence.approved_by.last_name}"
-        )
+        response["approved_by_name"] = f"{evidence.approved_by.first_name} {evidence.approved_by.last_name}"
     else:
         response["approved_by_name"] = None
 
@@ -168,7 +163,8 @@ async def list_evidence(
     Non-admin users only see evidence for entities they have access to.
     """
     tenant_uuid = UUID(tenant_id)
-    is_admin = "admin" in current_user.get("roles", [])
+    user_roles = current_user.get("roles", [])
+    is_admin = "SYSTEM_ADMIN" in user_roles or "TENANT_ADMIN" in user_roles
     user_id = UUID(current_user["user_id"])
 
     # Base query with eager loading
@@ -176,9 +172,7 @@ async def list_evidence(
         db.query(Evidence)
         .options(
             joinedload(Evidence.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(Evidence.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(Evidence.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(Evidence.approved_by),
         )
         .filter(Evidence.tenant_id == tenant_uuid)
@@ -196,9 +190,9 @@ async def list_evidence(
         accessible_ids = [row.entity_id for row in accessible_entity_ids]
 
         # Filter evidence by instance entity
-        query = query.join(
-            ComplianceInstance, Evidence.compliance_instance_id == ComplianceInstance.id
-        ).filter(ComplianceInstance.entity_id.in_(accessible_ids))
+        query = query.join(ComplianceInstance, Evidence.compliance_instance_id == ComplianceInstance.id).filter(
+            ComplianceInstance.entity_id.in_(accessible_ids)
+        )
 
     # Apply filters
     if compliance_instance_id:
@@ -206,9 +200,7 @@ async def list_evidence(
     if entity_id:
         # Need to join if not already joined
         if is_admin:
-            query = query.join(
-                ComplianceInstance, Evidence.compliance_instance_id == ComplianceInstance.id
-            )
+            query = query.join(ComplianceInstance, Evidence.compliance_instance_id == ComplianceInstance.id)
         query = query.filter(ComplianceInstance.entity_id == UUID(entity_id))
     if approval_status:
         query = query.filter(Evidence.approval_status == approval_status)
@@ -244,9 +236,7 @@ async def get_evidence(
         db.query(Evidence)
         .options(
             joinedload(Evidence.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(Evidence.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(Evidence.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(Evidence.approved_by),
         )
         .filter(Evidence.id == evidence_uuid, Evidence.tenant_id == tenant_uuid)
@@ -314,8 +304,7 @@ async def upload_evidence(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                f"Invalid file type: {content_type}. "
-                "Allowed types: PDF, PNG, JPEG, XLSX, XLS, DOCX, DOC, CSV, ZIP"
+                f"Invalid file type: {content_type}. " "Allowed types: PDF, PNG, JPEG, XLSX, XLS, DOCX, DOC, CSV, ZIP"
             ),
         )
 
@@ -379,9 +368,7 @@ async def upload_evidence(
         db.query(Evidence)
         .options(
             joinedload(Evidence.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(Evidence.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(Evidence.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(Evidence.approved_by),
         )
         .filter(Evidence.id == evidence.id)
@@ -522,9 +509,7 @@ async def approve_evidence(
         db.query(Evidence)
         .options(
             joinedload(Evidence.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(Evidence.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(Evidence.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(Evidence.approved_by),
         )
         .filter(Evidence.id == evidence.id)
@@ -609,9 +594,7 @@ async def reject_evidence(
         db.query(Evidence)
         .options(
             joinedload(Evidence.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(Evidence.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(Evidence.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(Evidence.approved_by),
         )
         .filter(Evidence.id == evidence.id)
@@ -658,10 +641,7 @@ async def delete_evidence(
     if evidence.is_immutable:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Cannot delete approved evidence. "
-                "Approved evidence is immutable for audit purposes."
-            ),
+            detail=("Cannot delete approved evidence. " "Approved evidence is immutable for audit purposes."),
         )
 
     # Log action before deletion

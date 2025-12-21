@@ -40,7 +40,7 @@ def require_user_admin(current_user: dict, target_tenant_id: Optional[str] = Non
     is_system_admin = current_user.get("is_system_admin", False)
 
     # System admins can manage all users
-    if is_system_admin or "admin" in user_roles:
+    if is_system_admin or "SYSTEM_ADMIN" in user_roles:
         return current_user
 
     # Tenant admins can only manage users in their own tenant
@@ -50,8 +50,8 @@ def require_user_admin(current_user: dict, target_tenant_id: Optional[str] = Non
             detail="You can only manage users in your own tenant",
         )
 
-    # Check if user has admin role in their tenant
-    if "admin" not in user_roles:
+    # Check if user has admin role in their tenant (SYSTEM_ADMIN or TENANT_ADMIN)
+    if "SYSTEM_ADMIN" not in user_roles and "TENANT_ADMIN" not in user_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only administrators can manage users",
@@ -209,7 +209,7 @@ async def list_users(
     # Apply tenant filtering
     if tenant_id:
         # Only system admins can filter by tenant
-        if not is_system_admin and "admin" not in user_roles:
+        if not is_system_admin and "SYSTEM_ADMIN" not in user_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only system administrators can view users across tenants",
@@ -227,9 +227,7 @@ async def list_users(
     if search:
         search_term = f"%{search}%"
         query = query.filter(
-            (User.first_name.ilike(search_term))
-            | (User.last_name.ilike(search_term))
-            | (User.email.ilike(search_term))
+            (User.first_name.ilike(search_term)) | (User.last_name.ilike(search_term)) | (User.email.ilike(search_term))
         )
 
     # Get total count
@@ -304,7 +302,7 @@ async def get_user(
     is_system_admin = current_user.get("is_system_admin", False)
     is_own_profile = str(user.id) == current_user["user_id"]
     is_same_tenant = str(user.tenant_id) == current_user["tenant_id"]
-    is_admin = "admin" in user_roles
+    is_admin = "SYSTEM_ADMIN" in user_roles or "TENANT_ADMIN" in user_roles
 
     # Allow if: own profile, OR admin in same tenant, OR system admin
     if not (is_own_profile or (is_admin and is_same_tenant) or is_system_admin):
@@ -373,7 +371,7 @@ async def update_user(
     is_system_admin = current_user.get("is_system_admin", False)
     is_own_profile = str(user.id) == current_user["user_id"]
     is_same_tenant = str(user.tenant_id) == current_user["tenant_id"]
-    is_admin = "admin" in user_roles
+    is_admin = "SYSTEM_ADMIN" in user_roles or "TENANT_ADMIN" in user_roles
 
     # Determine what can be updated
     can_update_basic = is_own_profile or (is_admin and is_same_tenant) or is_system_admin
@@ -482,7 +480,7 @@ async def delete_user(
     user_roles = current_user.get("roles", [])
     is_system_admin = current_user.get("is_system_admin", False)
     is_same_tenant = str(user.tenant_id) == current_user["tenant_id"]
-    is_admin = "admin" in user_roles
+    is_admin = "SYSTEM_ADMIN" in user_roles or "TENANT_ADMIN" in user_roles
 
     if not ((is_admin and is_same_tenant) or is_system_admin):
         raise HTTPException(
@@ -498,16 +496,11 @@ async def delete_user(
         )
 
     # Check for active workflow tasks
-    active_tasks_count = sum(
-        1 for task in user.assigned_tasks if task.status in ["pending", "in_progress"]
-    )
+    active_tasks_count = sum(1 for task in user.assigned_tasks if task.status in ["pending", "in_progress"])
     if active_tasks_count > 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                f"Cannot delete user with {active_tasks_count} active "
-                "workflow tasks. Reassign tasks first."
-            ),
+            detail=(f"Cannot delete user with {active_tasks_count} active " "workflow tasks. Reassign tasks first."),
         )
 
     # Soft delete: set status to inactive

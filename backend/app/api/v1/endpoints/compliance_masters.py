@@ -50,7 +50,7 @@ def require_master_admin(current_user: dict, is_template: bool = False) -> dict:
         )
 
     # Tenant admins can manage tenant-specific masters
-    admin_roles = ["System Admin", "Tenant Admin", "admin"]
+    admin_roles = ["SYSTEM_ADMIN", "TENANT_ADMIN"]
     if is_system_admin or check_role_permission(user_roles, admin_roles):
         return current_user
 
@@ -254,10 +254,7 @@ async def list_compliance_masters(
 
     # Apply pagination and ordering
     masters = (
-        query.order_by(ComplianceMaster.category, ComplianceMaster.compliance_code)
-        .offset(skip)
-        .limit(limit)
-        .all()
+        query.order_by(ComplianceMaster.category, ComplianceMaster.compliance_code).offset(skip).limit(limit).all()
     )
 
     # Build response

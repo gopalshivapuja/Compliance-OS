@@ -25,6 +25,10 @@ hiredis==2.2.3
 celery==5.3.4
 flower==2.0.1
 
+# Email
+sendgrid>=6.10.0
+Jinja2>=3.1.2
+
 # File Upload & Storage
 boto3==1.29.7  # AWS S3
 python-magic==0.4.27

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}ESCALATION: {{ compliance_name }} overdue{% endblock %}
+
+{% block content %}
+<h2><span class="status-badge status-red">Escalation</span></h2>
+
+<p>Hello {{ user_name }},</p>
+
+<p class="urgent">This compliance item is <strong>overdue by {{ days_overdue }} day(s)</strong> and requires immediate escalation attention:</p>
+
+<div class="info-box" style="border-left-color: #dc2626;">
+    <div class="info-row">
+        <span class="info-label">Compliance:</span>
+        <span class="info-value">{{ compliance_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Entity:</span>
+        <span class="info-value">{{ entity_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Period:</span>
+        <span class="info-value">{{ period }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Original Due Date:</span>
+        <span class="info-value"><strong class="urgent">{{ due_date }}</strong></span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Days Overdue:</span>
+        <span class="info-value"><strong class="urgent">{{ days_overdue }} day(s)</strong></span>
+    </div>
+</div>
+
+<p>This matter has been escalated to you for immediate resolution. Please review and take necessary action to complete this compliance requirement.</p>
+
+<p><strong>Potential consequences of non-compliance may include:</strong></p>
+<ul>
+    <li>Financial penalties and fines</li>
+    <li>Regulatory scrutiny</li>
+    <li>Reputational impact</li>
+</ul>
+
+<a href="{{ dashboard_url }}" class="button" style="background-color: #dc2626;">Review Now</a>
+
+<p style="margin-top: 24px;">Best regards,<br>Compliance OS Team</p>
+{% endblock %}

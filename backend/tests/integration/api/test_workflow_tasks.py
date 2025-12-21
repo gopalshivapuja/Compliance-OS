@@ -171,7 +171,7 @@ def admin_headers(admin_user_fixture: User):
             "user_id": str(admin_user_fixture.id),
             "tenant_id": str(admin_user_fixture.tenant_id),
             "email": admin_user_fixture.email,
-            "roles": ["admin"],
+            "roles": ["TENANT_ADMIN"],
             "is_system_admin": False,
         }
     )
@@ -344,9 +344,7 @@ class TestCreateWorkflowTask:
         assert response.status_code == 403
         assert "access denied" in response.json()["detail"].lower()
 
-    def test_create_task_no_auth(
-        self, client: TestClient, test_compliance_instance: ComplianceInstance
-    ):
+    def test_create_task_no_auth(self, client: TestClient, test_compliance_instance: ComplianceInstance):
         """Test creating task without authentication"""
         response = client.post(
             "/api/v1/workflow-tasks/",
@@ -459,10 +457,7 @@ class TestListWorkflowTasks:
 
         assert response.status_code == 200
         data = response.json()
-        assert all(
-            item["compliance_instance_id"] == str(test_compliance_instance.id)
-            for item in data["items"]
-        )
+        assert all(item["compliance_instance_id"] == str(test_compliance_instance.id) for item in data["items"])
 
     def test_list_tasks_filter_by_status(
         self,
@@ -535,9 +530,7 @@ class TestListWorkflowTasks:
 
         assert response.status_code == 200
         data = response.json()
-        assert all(
-            item["assigned_to_user_id"] == str(admin_user_fixture.id) for item in data["items"]
-        )
+        assert all(item["assigned_to_user_id"] == str(admin_user_fixture.id) for item in data["items"])
 
     def test_list_tasks_filter_by_task_type(
         self,

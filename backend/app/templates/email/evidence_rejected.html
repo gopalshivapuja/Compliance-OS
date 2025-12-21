@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Evidence Rejected: {{ evidence_name }}{% endblock %}
+
+{% block content %}
+<h2><span class="status-badge status-red">Rejected</span></h2>
+
+<p>Hello {{ user_name }},</p>
+
+<p>Unfortunately, your evidence submission has been <strong>rejected</strong> and requires revision:</p>
+
+<div class="info-box" style="border-left-color: #dc2626;">
+    <div class="info-row">
+        <span class="info-label">Evidence:</span>
+        <span class="info-value">{{ evidence_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Compliance:</span>
+        <span class="info-value">{{ compliance_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Status:</span>
+        <span class="info-value"><strong class="urgent">Rejected</strong></span>
+    </div>
+    {% if rejection_reason %}
+    <div class="info-row">
+        <span class="info-label">Reason:</span>
+        <span class="info-value">{{ rejection_reason }}</span>
+    </div>
+    {% endif %}
+</div>
+
+<p>Please review the rejection reason and upload a corrected version of the evidence.</p>
+
+<a href="{{ dashboard_url }}" class="button">Upload New Evidence</a>
+
+<p style="margin-top: 24px;">Best regards,<br>Compliance OS Team</p>
+{% endblock %}

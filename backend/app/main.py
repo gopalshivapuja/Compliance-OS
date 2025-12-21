@@ -36,7 +36,7 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
+    """Root endpoint - basic liveness check"""
     return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
@@ -44,11 +44,6 @@ async def root():
     }
 
 
-@app.get("/health")
-async def health_check():
-    """Detailed health check"""
-    return {
-        "status": "healthy",
-        "database": "connected",  # TODO: Add actual DB health check
-        "redis": "connected",  # TODO: Add actual Redis health check
-    }
+# Note: Detailed health check is available at /api/v1/health/health
+# which includes real DB, Redis, Celery, and S3 connectivity checks.
+# See app/api/v1/endpoints/health.py for implementation.

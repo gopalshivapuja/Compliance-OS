@@ -33,7 +33,8 @@ router = APIRouter()
 def _check_entity_access(db: Session, user: dict, entity_id: UUID, tenant_id: UUID) -> bool:
     """Check if user has access to an entity."""
     # Admins have access to all entities
-    if "admin" in user.get("roles", []):
+    user_roles = user.get("roles", [])
+    if "SYSTEM_ADMIN" in user_roles or "TENANT_ADMIN" in user_roles:
         return True
 
     # Check entity_access table
@@ -98,9 +99,7 @@ def _build_task_response(task: WorkflowTask, db: Session) -> dict:
 
     # Get assigned user name
     if task.assigned_user:
-        response["assigned_user_name"] = (
-            f"{task.assigned_user.first_name} {task.assigned_user.last_name}"
-        )
+        response["assigned_user_name"] = f"{task.assigned_user.first_name} {task.assigned_user.last_name}"
     else:
         response["assigned_user_name"] = None
 
@@ -115,9 +114,7 @@ def _build_task_response(task: WorkflowTask, db: Session) -> dict:
 
 @router.get("/", response_model=WorkflowTaskListResponse)
 async def list_workflow_tasks(
-    compliance_instance_id: Optional[str] = Query(
-        None, description="Filter by compliance instance"
-    ),
+    compliance_instance_id: Optional[str] = Query(None, description="Filter by compliance instance"),
     assigned_to_user_id: Optional[str] = Query(None, description="Filter by assigned user"),
     status: Optional[str] = Query(None, description="Filter by status"),
     task_type: Optional[str] = Query(None, description="Filter by task type"),
@@ -132,7 +129,8 @@ async def list_workflow_tasks(
     Non-admin users only see tasks for entities they have access to.
     """
     tenant_uuid = UUID(tenant_id)
-    is_admin = "admin" in current_user.get("roles", [])
+    user_roles = current_user.get("roles", [])
+    is_admin = "SYSTEM_ADMIN" in user_roles or "TENANT_ADMIN" in user_roles
     user_id = UUID(current_user["user_id"])
 
     # Base query with eager loading
@@ -140,9 +138,7 @@ async def list_workflow_tasks(
         db.query(WorkflowTask)
         .options(
             joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(WorkflowTask.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(WorkflowTask.assigned_user),
             joinedload(WorkflowTask.assigned_role),
         )
@@ -161,9 +157,9 @@ async def list_workflow_tasks(
         accessible_ids = [row.entity_id for row in accessible_entity_ids]
 
         # Filter tasks by instance entity
-        query = query.join(
-            ComplianceInstance, WorkflowTask.compliance_instance_id == ComplianceInstance.id
-        ).filter(ComplianceInstance.entity_id.in_(accessible_ids))
+        query = query.join(ComplianceInstance, WorkflowTask.compliance_instance_id == ComplianceInstance.id).filter(
+            ComplianceInstance.entity_id.in_(accessible_ids)
+        )
 
     # Apply filters
     if compliance_instance_id:
@@ -179,12 +175,7 @@ async def list_workflow_tasks(
     total = query.count()
 
     # Apply pagination and ordering
-    tasks = (
-        query.order_by(WorkflowTask.sequence_order, WorkflowTask.created_at.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    tasks = query.order_by(WorkflowTask.sequence_order, WorkflowTask.created_at.desc()).offset(skip).limit(limit).all()
 
     return {
         "items": [_build_task_response(task, db) for task in tasks],
@@ -211,9 +202,7 @@ async def get_workflow_task(
         db.query(WorkflowTask)
         .options(
             joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(WorkflowTask.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(WorkflowTask.assigned_user),
             joinedload(WorkflowTask.assigned_role),
         )
@@ -291,9 +280,7 @@ async def create_workflow_task(
 
     # Validate assigned role if provided
     if task_data.assigned_to_role_id:
-        assigned_role = (
-            db.query(Role).filter(Role.id == UUID(task_data.assigned_to_role_id)).first()
-        )
+        assigned_role = db.query(Role).filter(Role.id == UUID(task_data.assigned_to_role_id)).first()
         if not assigned_role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -324,12 +311,8 @@ async def create_workflow_task(
         task_type=task_data.task_type,
         task_name=task_data.task_name,
         task_description=task_data.task_description,
-        assigned_to_user_id=(
-            UUID(task_data.assigned_to_user_id) if task_data.assigned_to_user_id else None
-        ),
-        assigned_to_role_id=(
-            UUID(task_data.assigned_to_role_id) if task_data.assigned_to_role_id else None
-        ),
+        assigned_to_user_id=(UUID(task_data.assigned_to_user_id) if task_data.assigned_to_user_id else None),
+        assigned_to_role_id=(UUID(task_data.assigned_to_role_id) if task_data.assigned_to_role_id else None),
         sequence_order=task_data.sequence_order,
         parent_task_id=UUID(task_data.parent_task_id) if task_data.parent_task_id else None,
         due_date=task_data.due_date,
@@ -363,9 +346,7 @@ async def create_workflow_task(
         db.query(WorkflowTask)
         .options(
             joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(WorkflowTask.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(WorkflowTask.assigned_user),
             joinedload(WorkflowTask.assigned_role),
         )
@@ -477,9 +458,7 @@ async def update_workflow_task(
         db.query(WorkflowTask)
         .options(
             joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(WorkflowTask.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(WorkflowTask.assigned_user),
             joinedload(WorkflowTask.assigned_role),
         )
@@ -625,9 +604,7 @@ async def start_task(
         db.query(WorkflowTask)
         .options(
             joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(WorkflowTask.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(WorkflowTask.assigned_user),
             joinedload(WorkflowTask.assigned_role),
         )
@@ -711,9 +688,7 @@ async def complete_task(
         db.query(WorkflowTask)
         .options(
             joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(WorkflowTask.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(WorkflowTask.assigned_user),
             joinedload(WorkflowTask.assigned_role),
         )
@@ -796,9 +771,7 @@ async def reject_task(
         db.query(WorkflowTask)
         .options(
             joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.entity),
-            joinedload(WorkflowTask.compliance_instance).joinedload(
-                ComplianceInstance.compliance_master
-            ),
+            joinedload(WorkflowTask.compliance_instance).joinedload(ComplianceInstance.compliance_master),
             joinedload(WorkflowTask.assigned_user),
             joinedload(WorkflowTask.assigned_role),
         )

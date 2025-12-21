@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}New Task Assigned: {{ task_name }}{% endblock %}
+
+{% block content %}
+<h2>New Task Assignment</h2>
+
+<p>Hello {{ user_name }},</p>
+
+<p>A new task has been assigned to you:</p>
+
+<div class="info-box">
+    <div class="info-row">
+        <span class="info-label">Task:</span>
+        <span class="info-value"><strong>{{ task_name }}</strong></span>
+    </div>
+    {% if task_description %}
+    <div class="info-row">
+        <span class="info-label">Description:</span>
+        <span class="info-value">{{ task_description }}</span>
+    </div>
+    {% endif %}
+    <div class="info-row">
+        <span class="info-label">Compliance:</span>
+        <span class="info-value">{{ compliance_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Entity:</span>
+        <span class="info-value">{{ entity_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Due Date:</span>
+        <span class="info-value"><strong>{{ due_date }}</strong></span>
+    </div>
+</div>
+
+<p>Please review the task details and complete it before the due date.</p>
+
+<a href="{{ dashboard_url }}" class="button">View Task</a>
+
+<p style="margin-top: 24px;">Best regards,<br>Compliance OS Team</p>
+{% endblock %}

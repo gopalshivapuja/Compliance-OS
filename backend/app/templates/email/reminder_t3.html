@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Reminder: {{ compliance_name }} due in 3 days{% endblock %}
+
+{% block content %}
+<h2>Compliance Reminder</h2>
+
+<p>Hello {{ user_name }},</p>
+
+<p>This is a friendly reminder that the following compliance is due in <strong>3 days</strong>:</p>
+
+<div class="info-box">
+    <div class="info-row">
+        <span class="info-label">Compliance:</span>
+        <span class="info-value">{{ compliance_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Entity:</span>
+        <span class="info-value">{{ entity_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Period:</span>
+        <span class="info-value">{{ period }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Due Date:</span>
+        <span class="info-value"><strong>{{ due_date }}</strong></span>
+    </div>
+</div>
+
+<p>Please ensure all required documentation and evidence are uploaded before the due date to avoid penalties.</p>
+
+<a href="{{ dashboard_url }}" class="button">View Details</a>
+
+<p style="margin-top: 24px;">Best regards,<br>Compliance OS Team</p>
+{% endblock %}

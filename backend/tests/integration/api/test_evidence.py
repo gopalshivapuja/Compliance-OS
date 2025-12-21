@@ -164,7 +164,7 @@ def admin_headers(admin_user_fixture: User):
             "user_id": str(admin_user_fixture.id),
             "tenant_id": str(admin_user_fixture.tenant_id),
             "email": admin_user_fixture.email,
-            "roles": ["admin"],
+            "roles": ["TENANT_ADMIN"],
             "is_system_admin": False,
         }
     )
@@ -494,10 +494,7 @@ class TestListEvidence:
 
         assert response.status_code == 200
         data = response.json()
-        assert all(
-            item["compliance_instance_id"] == str(test_compliance_instance.id)
-            for item in data["items"]
-        )
+        assert all(item["compliance_instance_id"] == str(test_compliance_instance.id) for item in data["items"])
 
     def test_list_evidence_filter_by_approval_status(
         self,

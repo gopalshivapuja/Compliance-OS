@@ -34,7 +34,21 @@ class Settings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # AWS S3
+    # File Storage (Render Persistent Disk)
+    EVIDENCE_STORAGE_PATH: str = "./uploads/evidence"  # Local dev; production: /var/data/evidence
+    EVIDENCE_MAX_FILE_SIZE: int = 25 * 1024 * 1024  # 25MB
+    EVIDENCE_ALLOWED_TYPES: List[str] = [
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+        "image/jpg",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # xlsx
+        "application/vnd.ms-excel",  # xls
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # docx
+        "application/msword",  # doc
+    ]
+
+    # AWS S3 (optional, for future cloud storage)
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
     AWS_REGION: str = "ap-south-1"
@@ -42,6 +56,7 @@ class Settings(BaseSettings):
     AWS_S3_ENDPOINT_URL: str = ""  # For MinIO or local S3
 
     # Email
+    EMAIL_ENABLED: bool = False  # Toggle for email sending (disable in dev)
     SENDGRID_API_KEY: str = ""
     EMAIL_FROM_ADDRESS: str = "noreply@complianceos.com"
     EMAIL_FROM_NAME: str = "Compliance OS"

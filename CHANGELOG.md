@@ -7,12 +7,197 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for Phase 5 (Backend Background Jobs)
-- Celery scheduled tasks configuration
-- Automated compliance instance generation (daily cron)
-- RAG status recalculation (hourly cron)
-- Reminder notification tasks (T-3 days, due date, overdue)
-- Email notification integration (SendGrid)
+### Planned for Phase 6 (Frontend Authentication & Layout)
+- Login page with JWT authentication
+- Protected route middleware
+- Dashboard layout with sidebar navigation
+- User profile and settings pages
+
+---
+
+## [0.5.0] - 2024-12-21 - Phase 5 Complete: Backend Background Jobs
+
+### Added
+
+#### Email Service (`app/services/email_service.py` - 389 lines)
+- **SendGrid Integration**
+  - `EmailService` class with configurable API key and from address
+  - `send_email()` - Renders Jinja2 template and sends via SendGrid API
+  - `EMAIL_ENABLED` toggle for dev/prod modes (disabled by default)
+  - Automatic fallback to logging in development mode
+
+- **Email Helper Functions**
+  - `send_reminder_email()` - T-3 days, due date, and overdue reminders
+  - `send_escalation_email()` - Overdue escalation to CFO with days count
+  - `send_task_assigned_email()` - Task assignment notification
+  - `send_evidence_status_email()` - Evidence approval/rejection with reason
+  - `send_task_reminder_email()` - Task due date reminders
+
+- **Singleton Pattern**
+  - `get_email_service()` - Returns singleton EmailService instance
+  - Lazy initialization on first use
+
+#### Email Templates (`app/templates/email/` - 7 templates)
+- **Base Template** (`base.html`)
+  - Compliance OS branding with logo placeholder
+  - Responsive email layout for all clients
+  - RAG status badge styling (Green/Amber/Red)
+  - Info box styling for key details
+  - CTA button styling
+
+- **Notification Templates**
+  - `reminder_t3.html` - T-3 days compliance reminder
+  - `reminder_due.html` - Due date compliance reminder
+  - `escalation.html` - Overdue escalation with urgency styling
+  - `task_assigned.html` - New task assignment notification
+  - `evidence_approved.html` - Evidence approval confirmation
+  - `evidence_rejected.html` - Evidence rejection with reason
+
+#### Notification Tasks (`app/tasks/notification_tasks.py` - 260 lines)
+- **Async Email Tasks** (6 Celery tasks)
+  - `send_email_task()` - Generic email sending with retry logic
+  - `send_reminder_email_task()` - Reminder email queueing
+  - `send_escalation_email_task()` - Escalation email queueing
+  - `send_task_assigned_email_task()` - Task assignment emails
+  - `send_evidence_status_email_task()` - Evidence status emails
+  - `send_task_reminder_email_task()` - Task reminder emails
+
+- **Reliability Features**
+  - Exponential backoff retry (max 3 retries, 60s base delay)
+  - Database session management with proper cleanup
+  - Comprehensive error logging
+  - UUID string conversion for Celery serialization
+
+#### Reminder Tasks Integration
+- **Updated Functions** (`app/tasks/reminder_tasks.py`)
+  - `send_t3_reminders()` - Now queues T-3 reminder emails
+  - `send_due_date_reminders()` - Now queues due date emails
+  - `escalate_overdue_items()` - Now queues escalation emails
+  - `send_task_reminders()` - Now queues task reminder emails
+
+- **Email Queue Pattern**
+  ```python
+  # After in-app notification, queue email
+  notification = notify_reminder_t3(db, instance, owner)
+  if notification:
+      send_reminder_email_task.delay(
+          user_id=str(owner.id),
+          instance_id=str(instance.id),
+          reminder_type="t3",
+      )
+  ```
+
+### Testing
+
+#### Unit Tests (43 new tests - 100% passing)
+
+**Compliance Task Tests** (`test_compliance_tasks.py` - 15 tests):
+- `TestGenerateComplianceInstancesDaily`
+  - test_generates_instances_for_all_tenants
+  - test_skips_when_no_active_tenants
+  - test_handles_tenant_error_gracefully
+
+- `TestRecalculateRagStatusHourly`
+  - test_recalculates_rag_for_all_tenants
+  - test_handles_redis_failure_gracefully
+  - test_returns_no_tenants_when_empty
+
+- `TestGenerateQuarterlyInstances`
+  - test_generates_quarterly_instances
+
+- `TestGenerateAnnualInstances`
+  - test_generates_annual_instances_on_april_1
+  - test_filters_annual_frequency_only
+
+- `TestUpdateOverdueStatus`
+  - test_marks_past_due_as_overdue
+  - test_skips_completed_instances
+  - test_handles_multiple_overdue_instances
+  - test_handles_database_error
+
+- `TestInvalidateDashboardCache`
+  - test_deletes_dashboard_cache_keys
+  - test_handles_redis_error
+
+**Reminder Task Tests** (`test_reminder_tasks.py` - 15 tests):
+- `TestSendT3Reminders`
+  - test_sends_reminder_3_days_before_due
+  - test_skips_completed_instances
+  - test_handles_missing_owner
+
+- `TestSendDueDateReminders`
+  - test_sends_reminder_on_due_date
+  - test_handles_missing_owner
+
+- `TestEscalateOverdueItems`
+  - test_escalates_3_days_overdue
+  - test_prevents_duplicate_escalations
+  - test_finds_cfo_for_escalation
+
+- `TestSendTaskReminders`
+  - test_sends_reminder_2_days_before_task_due
+  - test_skips_completed_tasks
+
+- `TestCleanupOldNotifications`
+  - test_deletes_notifications_older_than_90_days
+  - test_handles_empty_notifications
+
+- `TestGetInstanceOwner`
+  - test_finds_owner_by_role_and_entity_access (integration)
+
+- `TestGetEscalationUser`
+  - test_finds_cfo_first (integration)
+  - test_falls_back_to_admin (integration)
+
+**Email Service Tests** (`test_email_service.py` - 13 tests):
+- `TestEmailService`
+  - test_email_disabled_in_dev_mode
+  - test_send_email_success
+  - test_handles_sendgrid_error
+  - test_handles_non_success_status_code
+
+- `TestTemplateRendering`
+  - test_template_renders_with_context
+  - test_template_not_found_raises_error
+
+- `TestEmailHelperFunctions`
+  - test_send_reminder_email
+  - test_send_escalation_email
+  - test_send_task_assigned_email
+  - test_send_evidence_status_email_approved
+  - test_send_evidence_status_email_rejected
+
+- `TestGetEmailService`
+  - test_returns_singleton_instance
+  - test_creates_new_instance_when_none
+
+### Changed
+
+- **Config Settings** (`app/core/config.py`)
+  - Added `EMAIL_ENABLED: bool = False` toggle
+  - Added `SENDGRID_API_KEY: str = ""` for SendGrid
+  - Added `EMAIL_FROM_ADDRESS: str = "noreply@complianceos.com"`
+  - Added `EMAIL_FROM_NAME: str = "Compliance OS"`
+
+- **Type Hints** (`app/tasks/reminder_tasks.py`)
+  - Fixed Python 3.9 compatibility (changed `User | None` to `Optional[User]`)
+
+- **Exports**
+  - `app/tasks/__init__.py` - Added notification task exports
+  - `app/services/__init__.py` - Added email service exports
+
+### Dependencies
+
+- Added `sendgrid>=6.10.0` for email sending
+- Added `Jinja2>=3.1.2` for email template rendering
+
+### Statistics
+
+- **Code**: ~1,200 lines of production code
+- **Tests**: ~900 lines of test code (43 tests)
+- **Templates**: ~500 lines of HTML templates
+- **Total Unit Tests**: 359 (100% passing)
+- **Duration**: 1 day
 
 ---
 

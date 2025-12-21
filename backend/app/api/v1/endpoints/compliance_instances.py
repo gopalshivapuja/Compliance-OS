@@ -11,6 +11,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_tenant_id, get_current_user
 from app.models import ComplianceInstance, ComplianceMaster, Entity, User
 from app.schemas import (
+    ComplianceInstanceCreate,
     ComplianceInstanceResponse,
     ComplianceInstanceListResponse,
     ComplianceInstanceUpdate,
@@ -199,20 +200,173 @@ async def get_compliance_instance(
     )
 
 
-@router.post("/")
+@router.post("/", response_model=ComplianceInstanceResponse, status_code=status.HTTP_201_CREATED)
 async def create_compliance_instance(
+    instance_data: ComplianceInstanceCreate,
     db: Session = Depends(get_db),
     tenant_id: str = Depends(get_current_tenant_id),
+    current_user: dict = Depends(get_current_user),
 ):
     """
-    Create a new compliance instance (usually auto-generated).
+    Create a new compliance instance.
 
-    TODO: Implement creation logic
+    Args:
+        instance_data: Compliance instance creation data
+        db: Database session
+        tenant_id: Current tenant ID
+        current_user: Current authenticated user
+
+    Returns:
+        ComplianceInstanceResponse: Created compliance instance
+
+    Raises:
+        HTTPException 404: If compliance master or entity not found
+        HTTPException 403: If user doesn't have access to entity
+        HTTPException 400: If duplicate period exists
     """
-    return {
-        "message": "Create compliance instance endpoint - TODO: Implement",
-        "tenant_id": tenant_id,
-    }
+    tenant_uuid = UUID(tenant_id)
+    user_id = UUID(current_user["user_id"])
+
+    # Validate compliance master exists
+    master = (
+        db.query(ComplianceMaster)
+        .filter(
+            ComplianceMaster.id == UUID(instance_data.compliance_master_id),
+        )
+        .first()
+    )
+    if not master:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Compliance master '{instance_data.compliance_master_id}' not found",
+        )
+
+    # Validate entity exists and belongs to tenant
+    entity = (
+        db.query(Entity)
+        .filter(
+            Entity.id == UUID(instance_data.entity_id),
+            Entity.tenant_id == tenant_uuid,
+        )
+        .first()
+    )
+    if not entity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Entity '{instance_data.entity_id}' not found"
+        )
+
+    # Check entity access (admins can access all, others need explicit access)
+    user_roles = current_user.get("roles", [])
+    is_admin = "SYSTEM_ADMIN" in user_roles or "TENANT_ADMIN" in user_roles
+    if not is_admin:
+        has_access = check_entity_access(
+            db=db,
+            user_id=user_id,
+            entity_id=UUID(instance_data.entity_id),
+            tenant_id=tenant_uuid,
+        )
+        if not has_access:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this entity")
+
+    # Check for duplicate period
+    existing = (
+        db.query(ComplianceInstance)
+        .filter(
+            ComplianceInstance.compliance_master_id == UUID(instance_data.compliance_master_id),
+            ComplianceInstance.entity_id == UUID(instance_data.entity_id),
+            ComplianceInstance.period_start == instance_data.period_start,
+            ComplianceInstance.period_end == instance_data.period_end,
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="A compliance instance for this period already exists"
+        )
+
+    # Create instance
+    instance = ComplianceInstance(
+        tenant_id=tenant_uuid,
+        compliance_master_id=UUID(instance_data.compliance_master_id),
+        entity_id=UUID(instance_data.entity_id),
+        period_start=instance_data.period_start,
+        period_end=instance_data.period_end,
+        due_date=instance_data.due_date,
+        status=instance_data.status or "Not Started",
+        rag_status=instance_data.rag_status or "Green",
+        owner_user_id=UUID(instance_data.owner_user_id) if instance_data.owner_user_id else None,
+        approver_user_id=UUID(instance_data.approver_user_id) if instance_data.approver_user_id else None,
+        remarks=instance_data.remarks,
+        created_by=user_id,
+        updated_by=user_id,
+    )
+    db.add(instance)
+    db.flush()
+
+    # Log action
+    await log_action(
+        db=db,
+        user_id=str(user_id),
+        tenant_id=tenant_id,
+        action_type="CREATE",
+        resource_type="compliance_instance",
+        resource_id=str(instance.id),
+        new_values={
+            "compliance_master_id": instance_data.compliance_master_id,
+            "entity_id": instance_data.entity_id,
+            "period_start": str(instance_data.period_start),
+            "period_end": str(instance_data.period_end),
+            "due_date": str(instance_data.due_date),
+            "status": instance.status,
+        },
+    )
+
+    db.commit()
+    db.refresh(instance)
+
+    # Get owner and approver names
+    owner_name = None
+    approver_name = None
+    if instance.owner_user_id:
+        owner = db.query(User).filter(User.id == instance.owner_user_id).first()
+        if owner:
+            owner_name = f"{owner.first_name} {owner.last_name}"
+    if instance.approver_user_id:
+        approver = db.query(User).filter(User.id == instance.approver_user_id).first()
+        if approver:
+            approver_name = f"{approver.first_name} {approver.last_name}"
+
+    # Return response
+    return ComplianceInstanceResponse(
+        compliance_instance_id=str(instance.id),
+        compliance_master_id=str(instance.compliance_master_id),
+        compliance_code=master.compliance_code,
+        compliance_name=master.compliance_name,
+        entity_id=str(instance.entity_id),
+        entity_name=entity.entity_name,
+        entity_code=entity.entity_code,
+        category=master.category,
+        sub_category=master.sub_category,
+        frequency=master.frequency,
+        due_date=instance.due_date,
+        status=instance.status,
+        rag_status=instance.rag_status,
+        period_start=instance.period_start,
+        period_end=instance.period_end,
+        owner_id=str(instance.owner_user_id) if instance.owner_user_id else None,
+        owner_name=owner_name,
+        approver_id=str(instance.approver_user_id) if instance.approver_user_id else None,
+        approver_name=approver_name,
+        filed_date=instance.filed_date,
+        completion_date=instance.completion_date,
+        completion_remarks=instance.completion_remarks,
+        remarks=instance.remarks,
+        meta_data=instance.meta_data,
+        created_at=instance.created_at,
+        updated_at=instance.updated_at,
+        created_by=str(instance.created_by) if instance.created_by else None,
+        updated_by=str(instance.updated_by) if instance.updated_by else None,
+    )
 
 
 @router.put("/{compliance_instance_id}", response_model=ComplianceInstanceResponse)
@@ -371,18 +525,180 @@ async def update_compliance_instance(
     )
 
 
-@router.post("/{compliance_instance_id}/recalculate-status")
+@router.post("/{compliance_instance_id}/recalculate-status", response_model=ComplianceInstanceResponse)
 async def recalculate_status(
     compliance_instance_id: str,
     db: Session = Depends(get_db),
     tenant_id: str = Depends(get_current_tenant_id),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Manually trigger status recalculation (Overdue, Blocked, etc.).
 
-    TODO: Implement recalculation logic
+    Recalculates RAG status based on:
+    - Due date proximity
+    - Overdue status
+    - Blocking dependencies
+    - Completion status
     """
-    return {
-        "message": f"Recalculate status for {compliance_instance_id} - TODO: Implement",
-        "tenant_id": tenant_id,
-    }
+    from datetime import date, timedelta
+
+    tenant_uuid = UUID(tenant_id)
+    instance_uuid = UUID(compliance_instance_id)
+    user_id = UUID(current_user["user_id"])
+
+    # Get instance with related data
+    instance = (
+        db.query(ComplianceInstance)
+        .filter(
+            ComplianceInstance.id == instance_uuid,
+            ComplianceInstance.tenant_id == tenant_uuid,
+        )
+        .first()
+    )
+
+    if not instance:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Compliance instance '{compliance_instance_id}' not found"
+        )
+
+    # Check entity access
+    user_roles = current_user.get("roles", [])
+    is_admin = "SYSTEM_ADMIN" in user_roles or "TENANT_ADMIN" in user_roles
+    if not is_admin:
+        has_access = check_entity_access(
+            db=db,
+            user_id=user_id,
+            entity_id=instance.entity_id,
+            tenant_id=tenant_uuid,
+        )
+        if not has_access:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this compliance instance"
+            )
+
+    # Get master and entity for response
+    master = db.query(ComplianceMaster).filter(ComplianceMaster.id == instance.compliance_master_id).first()
+    entity = db.query(Entity).filter(Entity.id == instance.entity_id).first()
+
+    # Calculate new RAG status
+    today = date.today()
+    old_rag = instance.rag_status
+    old_status = instance.status
+
+    # Check for blocking dependencies first (highest priority after completion)
+    has_blocking_dependency = False
+
+    # Check direct blocking instance reference
+    if instance.blocking_compliance_instance_id:
+        blocking_instance = (
+            db.query(ComplianceInstance)
+            .filter(
+                ComplianceInstance.id == instance.blocking_compliance_instance_id,
+                ComplianceInstance.status.notin_(["Completed", "Filed"]),
+            )
+            .first()
+        )
+        if blocking_instance:
+            has_blocking_dependency = True
+
+    # Check master dependencies (compliance codes)
+    if not has_blocking_dependency and master and master.dependencies:
+        for dep_code in master.dependencies:
+            dep_master = db.query(ComplianceMaster).filter(ComplianceMaster.compliance_code == dep_code).first()
+            if dep_master:
+                # Check if dependency instance exists and is not completed
+                dep_instance = (
+                    db.query(ComplianceInstance)
+                    .filter(
+                        ComplianceInstance.compliance_master_id == dep_master.id,
+                        ComplianceInstance.entity_id == instance.entity_id,
+                        ComplianceInstance.status.notin_(["Completed", "Filed"]),
+                    )
+                    .first()
+                )
+                if dep_instance:
+                    # Has blocking dependency
+                    has_blocking_dependency = True
+                    break
+
+    # Completed/Filed instances are always Green
+    if instance.status in ["Completed", "Filed"]:
+        instance.rag_status = "Green"
+    # Blocking dependencies make it Amber and status Blocked
+    elif has_blocking_dependency:
+        instance.rag_status = "Amber"
+        instance.status = "Blocked"
+    # Overdue instances are Red
+    elif instance.due_date < today:
+        instance.rag_status = "Red"
+        instance.status = "Overdue"
+    # Due within 3 days is Red (critical)
+    elif instance.due_date <= today + timedelta(days=3):
+        instance.rag_status = "Red"
+    # Due within 4-7 days is Amber
+    elif instance.due_date <= today + timedelta(days=7):
+        instance.rag_status = "Amber"
+    # Otherwise Green
+    else:
+        instance.rag_status = "Green"
+
+    instance.updated_by = user_id
+    db.commit()
+    db.refresh(instance)
+
+    # Log if status changed
+    if old_rag != instance.rag_status or old_status != instance.status:
+        await log_action(
+            db=db,
+            user_id=str(user_id),
+            tenant_id=tenant_id,
+            action_type="UPDATE",
+            resource_type="compliance_instance",
+            resource_id=str(instance.id),
+            old_values={"rag_status": old_rag, "status": old_status},
+            new_values={"rag_status": instance.rag_status, "status": instance.status},
+        )
+
+    # Get owner and approver names
+    owner_name = None
+    approver_name = None
+    if instance.owner_user_id:
+        owner = db.query(User).filter(User.id == instance.owner_user_id).first()
+        if owner:
+            owner_name = f"{owner.first_name} {owner.last_name}"
+    if instance.approver_user_id:
+        approver = db.query(User).filter(User.id == instance.approver_user_id).first()
+        if approver:
+            approver_name = f"{approver.first_name} {approver.last_name}"
+
+    return ComplianceInstanceResponse(
+        compliance_instance_id=str(instance.id),
+        compliance_master_id=str(instance.compliance_master_id),
+        compliance_code=master.compliance_code if master else "",
+        compliance_name=master.compliance_name if master else "",
+        entity_id=str(instance.entity_id),
+        entity_name=entity.entity_name if entity else "",
+        entity_code=entity.entity_code if entity else "",
+        category=master.category if master else "",
+        sub_category=master.sub_category if master else None,
+        frequency=master.frequency if master else "",
+        due_date=instance.due_date,
+        status=instance.status,
+        rag_status=instance.rag_status,
+        period_start=instance.period_start,
+        period_end=instance.period_end,
+        owner_id=str(instance.owner_user_id) if instance.owner_user_id else None,
+        owner_name=owner_name,
+        approver_id=str(instance.approver_user_id) if instance.approver_user_id else None,
+        approver_name=approver_name,
+        filed_date=instance.filed_date,
+        completion_date=instance.completion_date,
+        completion_remarks=instance.completion_remarks,
+        remarks=instance.remarks,
+        meta_data=instance.meta_data,
+        created_at=instance.created_at,
+        updated_at=instance.updated_at,
+        created_by=str(instance.created_by) if instance.created_by else None,
+        updated_by=str(instance.updated_by) if instance.updated_by else None,
+    )

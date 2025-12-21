@@ -293,12 +293,61 @@ async def get_owner_heatmap(
     """
     Get compliance load by owner (heatmap data).
 
-    TODO: Implement owner heatmap logic
+    Returns compliance distribution by owner with RAG status breakdown.
+    Useful for identifying overloaded owners and workload imbalances.
+
+    Returns:
+        List of owner summaries with green/amber/red counts
     """
-    return {
-        "message": "Owner heatmap endpoint - TODO: Implement",
-        "tenant_id": tenant_id,
-    }
+    # Query compliance instances grouped by owner and RAG status
+    owner_rag_counts = (
+        db.query(
+            ComplianceInstance.owner_user_id,
+            ComplianceInstance.rag_status,
+            func.count(ComplianceInstance.id).label("count"),
+        )
+        .filter(
+            ComplianceInstance.tenant_id == tenant_id,
+            ComplianceInstance.owner_user_id.isnot(None),
+            ComplianceInstance.status.notin_(["Completed", "Filed", "Cancelled"]),
+        )
+        .group_by(ComplianceInstance.owner_user_id, ComplianceInstance.rag_status)
+        .all()
+    )
+
+    # Get owner names
+    owner_ids = set(row.owner_user_id for row in owner_rag_counts if row.owner_user_id)
+    owners = {}
+    if owner_ids:
+        owner_records = (
+            db.query(User.id, User.first_name, User.last_name, User.email).filter(User.id.in_(owner_ids)).all()
+        )
+        for owner in owner_records:
+            full_name = f"{owner.first_name or ''} {owner.last_name or ''}".strip()
+            owners[str(owner.id)] = full_name or owner.email
+
+    # Aggregate by owner
+    owner_data = {}
+    for row in owner_rag_counts:
+        owner_id = str(row.owner_user_id)
+        if owner_id not in owner_data:
+            owner_data[owner_id] = {
+                "owner_id": owner_id,
+                "owner_name": owners.get(owner_id, "Unknown"),
+                "green": 0,
+                "amber": 0,
+                "red": 0,
+                "total": 0,
+            }
+        rag = row.rag_status.lower() if row.rag_status else "green"
+        if rag in ["green", "amber", "red"]:
+            owner_data[owner_id][rag] += row.count
+            owner_data[owner_id]["total"] += row.count
+
+    # Sort by total (descending) to show busiest owners first
+    result = sorted(owner_data.values(), key=lambda x: x["total"], reverse=True)
+
+    return result
 
 
 @router.get("/category-breakdown", response_model=list[CategoryBreakdown])

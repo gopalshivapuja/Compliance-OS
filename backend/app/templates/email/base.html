@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Compliance OS{% endblock %}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .email-wrapper {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #1e40af;
+            color: #ffffff;
+            padding: 24px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 32px 24px;
+        }
+        .content h2 {
+            color: #1e40af;
+            margin-top: 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-green { background-color: #d1fae5; color: #065f46; }
+        .status-amber { background-color: #fef3c7; color: #92400e; }
+        .status-red { background-color: #fee2e2; color: #991b1b; }
+        .info-box {
+            background-color: #f8fafc;
+            border-left: 4px solid #1e40af;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #64748b;
+            width: 120px;
+        }
+        .info-value {
+            color: #1e293b;
+        }
+        .button {
+            display: inline-block;
+            background-color: #1e40af;
+            color: #ffffff !important;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 16px;
+        }
+        .button:hover {
+            background-color: #1e3a8a;
+        }
+        .footer {
+            background-color: #f8fafc;
+            padding: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+        }
+        .footer a {
+            color: #1e40af;
+            text-decoration: none;
+        }
+        .urgent {
+            color: #dc2626;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="email-wrapper">
+            <div class="header">
+                <h1>Compliance OS</h1>
+            </div>
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+            <div class="footer">
+                <p>This is an automated message from Compliance OS.</p>
+                <p>
+                    <a href="{{ dashboard_url }}">View in Dashboard</a>
+                </p>
+                <p>&copy; {{ now().year if now is defined else '2024' }} Compliance OS. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

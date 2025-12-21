@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Evidence Approved: {{ evidence_name }}{% endblock %}
+
+{% block content %}
+<h2><span class="status-badge status-green">Approved</span></h2>
+
+<p>Hello {{ user_name }},</p>
+
+<p>Great news! Your evidence submission has been <strong>approved</strong>:</p>
+
+<div class="info-box" style="border-left-color: #10b981;">
+    <div class="info-row">
+        <span class="info-label">Evidence:</span>
+        <span class="info-value">{{ evidence_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Compliance:</span>
+        <span class="info-value">{{ compliance_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Status:</span>
+        <span class="info-value"><strong style="color: #10b981;">Approved</strong></span>
+    </div>
+</div>
+
+<p>The evidence has been marked as immutable and is now part of the permanent compliance record.</p>
+
+<a href="{{ dashboard_url }}" class="button" style="background-color: #10b981;">View Evidence</a>
+
+<p style="margin-top: 24px;">Best regards,<br>Compliance OS Team</p>
+{% endblock %}

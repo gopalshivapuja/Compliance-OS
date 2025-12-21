@@ -71,6 +71,15 @@ from app.services.notification_service import (
     notify_instance_created,
     notify_instance_completed,
 )
+from app.services.email_service import (
+    EmailService,
+    get_email_service,
+    send_reminder_email,
+    send_escalation_email,
+    send_task_assigned_email,
+    send_evidence_status_email,
+    send_task_reminder_email,
+)
 
 __all__ = [
     # Audit service
@@ -142,4 +151,12 @@ __all__ = [
     "notify_evidence_rejected",
     "notify_instance_created",
     "notify_instance_completed",
+    # Email service
+    "EmailService",
+    "get_email_service",
+    "send_reminder_email",
+    "send_escalation_email",
+    "send_task_assigned_email",
+    "send_evidence_status_email",
+    "send_task_reminder_email",
 ]

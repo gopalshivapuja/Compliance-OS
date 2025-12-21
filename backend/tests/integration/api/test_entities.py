@@ -121,7 +121,7 @@ def admin_headers(admin_user_fixture: User):
             "user_id": str(admin_user_fixture.id),
             "tenant_id": str(admin_user_fixture.tenant_id),
             "email": admin_user_fixture.email,
-            "roles": ["admin"],
+            "roles": ["TENANT_ADMIN"],
             "is_system_admin": False,
         }
     )
@@ -146,9 +146,7 @@ def regular_headers(regular_user_fixture: User):
 class TestCreateEntity:
     """Tests for POST /api/v1/entities"""
 
-    def test_create_entity_success(
-        self, client: TestClient, admin_headers: dict, test_tenant: Tenant
-    ):
+    def test_create_entity_success(self, client: TestClient, admin_headers: dict, test_tenant: Tenant):
         """Test creating an entity as tenant admin"""
         response = client.post(
             "/api/v1/entities/",
@@ -174,9 +172,7 @@ class TestCreateEntity:
         assert data["users_with_access_count"] == 1  # Creator auto-granted access
         assert "id" in data
 
-    def test_create_entity_duplicate_code(
-        self, client: TestClient, admin_headers: dict, test_entity: Entity
-    ):
+    def test_create_entity_duplicate_code(self, client: TestClient, admin_headers: dict, test_entity: Entity):
         """Test creating entity with duplicate code"""
         response = client.post(
             "/api/v1/entities/",
@@ -219,9 +215,7 @@ class TestCreateEntity:
 
         assert response.status_code == 422
 
-    def test_create_entity_unauthorized_regular_user(
-        self, client: TestClient, regular_headers: dict
-    ):
+    def test_create_entity_unauthorized_regular_user(self, client: TestClient, regular_headers: dict):
         """Test creating entity as non-admin user"""
         response = client.post(
             "/api/v1/entities/",
@@ -251,9 +245,7 @@ class TestCreateEntity:
 class TestListEntities:
     """Tests for GET /api/v1/entities"""
 
-    def test_list_entities_as_admin(
-        self, client: TestClient, admin_headers: dict, test_entity: Entity
-    ):
+    def test_list_entities_as_admin(self, client: TestClient, admin_headers: dict, test_entity: Entity):
         """Test listing entities as tenant admin"""
         response = client.get("/api/v1/entities/", headers=admin_headers)
 
@@ -359,9 +351,7 @@ class TestListEntities:
         assert data["total"] >= 1
         assert any("Searchable" in e["entity_name"] for e in data["items"])
 
-    def test_list_entities_tenant_isolation(
-        self, client: TestClient, admin_headers: dict, db_session: Session
-    ):
+    def test_list_entities_tenant_isolation(self, client: TestClient, admin_headers: dict, db_session: Session):
         """Test that tenant admins only see entities in their tenant"""
         # Create another tenant with entity
         other_tenant = Tenant(
@@ -445,9 +435,7 @@ class TestListEntities:
 class TestGetEntity:
     """Tests for GET /api/v1/entities/{entity_id}"""
 
-    def test_get_entity_success_as_admin(
-        self, client: TestClient, admin_headers: dict, test_entity: Entity
-    ):
+    def test_get_entity_success_as_admin(self, client: TestClient, admin_headers: dict, test_entity: Entity):
         """Test getting entity as tenant admin"""
         response = client.get(f"/api/v1/entities/{test_entity.id}", headers=admin_headers)
 
@@ -529,9 +517,7 @@ class TestGetEntity:
 class TestUpdateEntity:
     """Tests for PUT /api/v1/entities/{entity_id}"""
 
-    def test_update_entity_success(
-        self, client: TestClient, admin_headers: dict, test_entity: Entity
-    ):
+    def test_update_entity_success(self, client: TestClient, admin_headers: dict, test_entity: Entity):
         """Test updating entity as tenant admin"""
         response = client.put(
             f"/api/v1/entities/{test_entity.id}",
@@ -547,9 +533,7 @@ class TestUpdateEntity:
         assert data["entity_name"] == "Updated Entity Name"
         assert data["contact_email"] == "updated@entity.com"
 
-    def test_update_entity_partial(
-        self, client: TestClient, admin_headers: dict, test_entity: Entity
-    ):
+    def test_update_entity_partial(self, client: TestClient, admin_headers: dict, test_entity: Entity):
         """Test partial update (only some fields)"""
         original_name = test_entity.entity_name
 
@@ -682,9 +666,7 @@ class TestDeleteEntity:
         assert response.status_code == 400
         assert "active compliance instances" in response.json()["detail"].lower()
 
-    def test_delete_entity_unauthorized(
-        self, client: TestClient, regular_headers: dict, test_entity: Entity
-    ):
+    def test_delete_entity_unauthorized(self, client: TestClient, regular_headers: dict, test_entity: Entity):
         """Test deleting entity as non-admin user"""
         response = client.delete(f"/api/v1/entities/{test_entity.id}", headers=regular_headers)
 

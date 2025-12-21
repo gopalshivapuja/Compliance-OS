@@ -482,7 +482,7 @@ class TestEdgeCases:
         """Monthly period for December."""
         target_date = date(2024, 12, 15)
 
-        start, end = calculate_period_for_frequency("monthly", target_date)
+        start, end = calculate_period_for_frequency("Monthly", target_date)
 
         assert start == date(2024, 12, 1)
         assert end == date(2024, 12, 31)

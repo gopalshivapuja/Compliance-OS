@@ -7,7 +7,7 @@ This file contains common test fixtures used across all tests.
 import pytest
 import os
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
@@ -17,15 +17,12 @@ from app.models.base import Base
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.role import Role
-from app.models.audit_log import AuditLog
 from app.core.security import get_password_hash
 
 
 # PostgreSQL test database URL
 # Use separate test database on your existing PostgreSQL server
-TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL", "postgresql://gopal@localhost:5432/compliance_os_test"
-)
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql://gopal@localhost:5432/compliance_os_test")
 
 # Create test engine with PostgreSQL
 engine = create_engine(
@@ -134,11 +131,18 @@ def test_role(db_session):
 
 
 @pytest.fixture
-def auth_headers(test_user):
+def auth_headers(test_user, test_tenant):
     """
     Create authentication headers for API requests.
     """
     from app.core.security import create_access_token
 
-    token = create_access_token(data={"sub": str(test_user.id)})
+    # Match the token structure used by the actual login endpoint
+    token_data = {
+        "user_id": str(test_user.id),
+        "tenant_id": str(test_tenant.id),
+        "email": test_user.email,
+        "roles": [role.role_code for role in test_user.roles] if test_user.roles else [],
+    }
+    token = create_access_token(data=token_data)
     return {"Authorization": f"Bearer {token}"}

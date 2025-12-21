@@ -47,7 +47,7 @@ def require_entity_admin(current_user: dict) -> dict:
     is_system_admin = current_user.get("is_system_admin", False)
 
     # System admins and tenant admins can manage entities
-    admin_roles = ["System Admin", "Tenant Admin", "admin"]
+    admin_roles = ["SYSTEM_ADMIN", "TENANT_ADMIN"]
     if is_system_admin or check_role_permission(user_roles, admin_roles):
         return current_user
 
@@ -156,11 +156,7 @@ async def create_entity(
     db.refresh(entity)
 
     # Get user count with access
-    users_count = (
-        db.query(func.count(entity_access.c.user_id))
-        .filter(entity_access.c.entity_id == entity.id)
-        .scalar()
-    )
+    users_count = db.query(func.count(entity_access.c.user_id)).filter(entity_access.c.entity_id == entity.id).scalar()
 
     return EntityResponse(
         id=str(entity.id),
@@ -220,7 +216,7 @@ async def list_entities(
     """
     user_roles = current_user.get("roles", [])
     is_system_admin = current_user.get("is_system_admin", False)
-    admin_roles = ["System Admin", "Tenant Admin", "admin"]
+    admin_roles = ["SYSTEM_ADMIN", "TENANT_ADMIN"]
 
     # Build query
     query = db.query(Entity).filter(Entity.tenant_id == UUID(tenant_id))
@@ -247,9 +243,7 @@ async def list_entities(
 
     if search:
         search_term = f"%{search}%"
-        query = query.filter(
-            (Entity.entity_name.ilike(search_term)) | (Entity.entity_code.ilike(search_term))
-        )
+        query = query.filter((Entity.entity_name.ilike(search_term)) | (Entity.entity_code.ilike(search_term)))
 
     # Get total count
     total = query.count()
@@ -261,9 +255,7 @@ async def list_entities(
     entity_list = []
     for entity in entities:
         users_count = (
-            db.query(func.count(entity_access.c.user_id))
-            .filter(entity_access.c.entity_id == entity.id)
-            .scalar()
+            db.query(func.count(entity_access.c.user_id)).filter(entity_access.c.entity_id == entity.id).scalar()
         )
 
         entity_list.append(
@@ -323,11 +315,7 @@ async def get_entity(
         HTTPException 404: If entity not found
     """
     # Find entity
-    entity = (
-        db.query(Entity)
-        .filter(Entity.id == UUID(entity_id), Entity.tenant_id == UUID(tenant_id))
-        .first()
-    )
+    entity = db.query(Entity).filter(Entity.id == UUID(entity_id), Entity.tenant_id == UUID(tenant_id)).first()
 
     if not entity:
         raise HTTPException(
@@ -338,7 +326,7 @@ async def get_entity(
     # Authorization check
     user_roles = current_user.get("roles", [])
     is_system_admin = current_user.get("is_system_admin", False)
-    admin_roles = ["System Admin", "Tenant Admin", "admin"]
+    admin_roles = ["SYSTEM_ADMIN", "TENANT_ADMIN"]
 
     # Admins can access any entity in their tenant
     if not is_system_admin and not check_role_permission(user_roles, admin_roles):
@@ -356,11 +344,7 @@ async def get_entity(
             )
 
     # Get user count with access
-    users_count = (
-        db.query(func.count(entity_access.c.user_id))
-        .filter(entity_access.c.entity_id == entity.id)
-        .scalar()
-    )
+    users_count = db.query(func.count(entity_access.c.user_id)).filter(entity_access.c.entity_id == entity.id).scalar()
 
     return EntityResponse(
         id=str(entity.id),
@@ -419,11 +403,7 @@ async def update_entity(
     require_entity_admin(current_user)
 
     # Find entity
-    entity = (
-        db.query(Entity)
-        .filter(Entity.id == UUID(entity_id), Entity.tenant_id == UUID(tenant_id))
-        .first()
-    )
+    entity = db.query(Entity).filter(Entity.id == UUID(entity_id), Entity.tenant_id == UUID(tenant_id)).first()
 
     if not entity:
         raise HTTPException(
@@ -463,11 +443,7 @@ async def update_entity(
     db.refresh(entity)
 
     # Get user count with access
-    users_count = (
-        db.query(func.count(entity_access.c.user_id))
-        .filter(entity_access.c.entity_id == entity.id)
-        .scalar()
-    )
+    users_count = db.query(func.count(entity_access.c.user_id)).filter(entity_access.c.entity_id == entity.id).scalar()
 
     return EntityResponse(
         id=str(entity.id),
@@ -525,11 +501,7 @@ async def delete_entity(
     require_entity_admin(current_user)
 
     # Find entity
-    entity = (
-        db.query(Entity)
-        .filter(Entity.id == UUID(entity_id), Entity.tenant_id == UUID(tenant_id))
-        .first()
-    )
+    entity = db.query(Entity).filter(Entity.id == UUID(entity_id), Entity.tenant_id == UUID(tenant_id)).first()
 
     if not entity:
         raise HTTPException(
@@ -543,7 +515,7 @@ async def delete_entity(
             db.query(ComplianceInstance)
             .filter(
                 ComplianceInstance.entity_id == UUID(entity_id),
-                ComplianceInstance.status.in_(["pending", "in_progress"]),
+                ComplianceInstance.status.in_(["Pending", "In Progress", "Not Started", "pending", "in_progress"]),
             )
             .count()
         )

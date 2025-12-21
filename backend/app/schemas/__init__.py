@@ -24,6 +24,7 @@ from app.schemas.dashboard import (
 )
 from app.schemas.compliance_instance import (
     ComplianceInstanceBase,
+    ComplianceInstanceCreate,
     ComplianceInstanceResponse,
     ComplianceInstanceListResponse,
     ComplianceInstanceUpdate,
@@ -105,6 +106,7 @@ __all__ = [
     "ComplianceInstanceSummary",
     # Compliance Instance schemas
     "ComplianceInstanceBase",
+    "ComplianceInstanceCreate",
     "ComplianceInstanceResponse",
     "ComplianceInstanceListResponse",
     "ComplianceInstanceUpdate",

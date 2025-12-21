@@ -93,6 +93,34 @@ class ComplianceInstanceListResponse(BaseModel):
         }
 
 
+class ComplianceInstanceCreate(BaseModel):
+    """Schema for creating a compliance instance"""
+
+    compliance_master_id: str = Field(..., description="ID of the compliance master")
+    entity_id: str = Field(..., description="ID of the entity")
+    period_start: date = Field(..., description="Start of the compliance period")
+    period_end: date = Field(..., description="End of the compliance period")
+    due_date: date = Field(..., description="Due date for compliance")
+    status: Optional[str] = Field(default="Not Started", description="Instance status")
+    rag_status: Optional[str] = Field(default="Green", description="RAG status")
+    owner_user_id: Optional[str] = Field(None, description="Owner user ID")
+    approver_user_id: Optional[str] = Field(None, description="Approver user ID")
+    remarks: Optional[str] = Field(None, description="Additional remarks")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "compliance_master_id": "123e4567-e89b-12d3-a456-426614174000",
+                "entity_id": "456e7890-e89b-12d3-a456-426614174000",
+                "period_start": "2024-12-01",
+                "period_end": "2024-12-31",
+                "due_date": "2025-01-20",
+                "status": "Not Started",
+                "rag_status": "Green",
+            }
+        }
+
+
 class ComplianceInstanceUpdate(BaseModel):
     """Schema for updating a compliance instance"""
 

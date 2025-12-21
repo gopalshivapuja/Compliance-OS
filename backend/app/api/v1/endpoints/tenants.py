@@ -34,9 +34,9 @@ def require_system_admin(current_user: dict) -> dict:
     Raises:
         HTTPException 403: If user is not a system admin
     """
-    # Check if user has admin role
+    # Check if user has SYSTEM_ADMIN role
     user_roles = current_user.get("roles", [])
-    if "admin" not in user_roles and not current_user.get("is_system_admin", False):
+    if "SYSTEM_ADMIN" not in user_roles and not current_user.get("is_system_admin", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only system administrators can manage tenants",
@@ -208,7 +208,7 @@ async def get_tenant(
 
     # Authorization check: user's own tenant or system admin
     user_roles = current_user.get("roles", [])
-    is_admin = "admin" in user_roles or current_user.get("is_system_admin", False)
+    is_admin = "SYSTEM_ADMIN" in user_roles or current_user.get("is_system_admin", False)
 
     if str(tenant.id) != current_user["tenant_id"] and not is_admin:
         raise HTTPException(

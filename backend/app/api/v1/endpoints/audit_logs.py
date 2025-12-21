@@ -40,7 +40,7 @@ async def list_audit_logs(
     """
     # Check role permission (RBAC)
     user_roles = current_user.get("roles", [])
-    if not check_role_permission(user_roles, ["CFO", "System Admin"]):
+    if not check_role_permission(user_roles, ["CFO", "SYSTEM_ADMIN"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Only CFO and System Admin can view audit logs.",
@@ -105,7 +105,7 @@ async def get_resource_audit_trail_endpoint(
     """
     # Check role permission (RBAC)
     user_roles = current_user.get("roles", [])
-    if not check_role_permission(user_roles, ["CFO", "System Admin"]):
+    if not check_role_permission(user_roles, ["CFO", "SYSTEM_ADMIN"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Only CFO and System Admin can view audit logs.",
@@ -164,7 +164,7 @@ async def get_audit_log(
     """
     # Check role permission (RBAC)
     user_roles = current_user.get("roles", [])
-    if not check_role_permission(user_roles, ["CFO", "System Admin"]):
+    if not check_role_permission(user_roles, ["CFO", "SYSTEM_ADMIN"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Only CFO and System Admin can view audit logs.",

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Action Required: {{ compliance_name }} is due today{% endblock %}
+
+{% block content %}
+<h2><span class="status-badge status-amber">Due Today</span></h2>
+
+<p>Hello {{ user_name }},</p>
+
+<p>The following compliance item is <strong>due today</strong> and requires your immediate attention:</p>
+
+<div class="info-box">
+    <div class="info-row">
+        <span class="info-label">Compliance:</span>
+        <span class="info-value">{{ compliance_name }}</span>
+    </div>
+    {% if entity_name %}
+    <div class="info-row">
+        <span class="info-label">Entity:</span>
+        <span class="info-value">{{ entity_name }}</span>
+    </div>
+    {% endif %}
+    {% if period %}
+    <div class="info-row">
+        <span class="info-label">Period:</span>
+        <span class="info-value">{{ period }}</span>
+    </div>
+    {% endif %}
+    <div class="info-row">
+        <span class="info-label">Due Date:</span>
+        <span class="info-value"><strong>{{ due_date }}</strong></span>
+    </div>
+    {% if days_until_due is defined and days_until_due > 0 %}
+    <div class="info-row">
+        <span class="info-label">Days Left:</span>
+        <span class="info-value">{{ days_until_due }} day(s)</span>
+    </div>
+    {% endif %}
+</div>
+
+<p>Please complete all pending tasks and upload the required evidence to maintain compliance.</p>
+
+<a href="{{ dashboard_url }}" class="button">Take Action Now</a>
+
+<p style="margin-top: 24px;">Best regards,<br>Compliance OS Team</p>
+{% endblock %}

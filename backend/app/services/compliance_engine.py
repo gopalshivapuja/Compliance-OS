@@ -8,6 +8,7 @@ from calendar import monthrange
 from typing import Optional
 from uuid import UUID
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models import ComplianceMaster, ComplianceInstance, Entity, Evidence
@@ -228,9 +229,9 @@ def generate_instances_for_period(
     masters = (
         db.query(ComplianceMaster)
         .filter(
-            ComplianceMaster.is_active is True,
+            ComplianceMaster.is_active == True,  # noqa: E712 (SQLAlchemy comparison)
             or_(
-                ComplianceMaster.tenant_id is None,  # System templates
+                ComplianceMaster.tenant_id.is_(None),  # System templates
                 ComplianceMaster.tenant_id == tenant_id,  # Tenant-specific
             ),
         )
