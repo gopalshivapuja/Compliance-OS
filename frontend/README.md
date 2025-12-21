@@ -99,19 +99,24 @@ Using **TailwindCSS** for styling with custom RAG status colors:
 - `npm run type-check`: Run TypeScript type checking
 - `npm run format`: Format code with Prettier
 
-## 🚧 TODO
+## 🚧 Implementation Status
 
-- [ ] Implement authentication flow (login, logout, token refresh)
-- [ ] Implement dashboard with RAG status and charts
-- [ ] Implement compliance calendar/list view
-- [ ] Implement compliance detail view
-- [ ] Implement evidence vault with upload/download
-- [ ] Implement workflow task management
-- [ ] Implement audit log viewer
-- [ ] Add form validation with React Hook Form + Zod
-- [ ] Add error handling and loading states
-- [ ] Add unit tests
-- [ ] Add E2E tests
+### Implemented (Phase 2-3)
+- [x] Authentication flow (login, logout, token refresh)
+- [x] Dashboard with RAG status cards and overdue table
+- [x] Compliance list view with filtering
+- [x] Audit log viewer (role-restricted)
+- [x] Form validation with React Hook Form + Zod (login)
+- [x] E2E tests with Playwright
+
+### Pending (Phase 6+)
+- [ ] Protected route middleware
+- [ ] Full dashboard layout with sidebar navigation
+- [ ] Evidence vault with upload/download UI
+- [ ] Workflow task management UI
+- [ ] Entity and user management pages
+- [ ] Compliance detail view
+- [ ] Unit tests for components
 
 ## 🔐 Authentication
 
@@ -137,13 +142,12 @@ const { data } = await complianceInstancesApi.list({
 })
 ```
 
-## 🎯 Next Steps
+## 🎯 Next Steps (Phase 6)
 
-1. Implement authentication pages (login, signup if needed)
-2. Build dashboard components with real data
-3. Create compliance list/calendar view
-4. Implement evidence upload/download
-5. Add form components for CRUD operations
-6. Add charts/visualizations for RAG status
-7. Implement filtering and search
-8. Add error boundaries and loading states
+1. Add Next.js middleware for protected routes
+2. Build dashboard layout with sidebar navigation
+3. Create evidence vault UI (list, filter, upload, download)
+4. Build workflow task management interface
+5. Add entity and user management pages
+6. Implement compliance detail view with workflow
+7. Add comprehensive error boundaries and loading states

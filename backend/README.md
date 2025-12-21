@@ -87,7 +87,7 @@ backend/
 │       ├── compliance_tasks.py
 │       └── reminder_tasks.py
 ├── alembic/                   # Database migrations
-├── tests/                     # Unit and integration tests (627 tests)
+├── tests/                     # Unit and integration tests (583 tests)
 ├── requirements.txt
 ├── pyproject.toml
 ├── .env.example
@@ -137,11 +137,14 @@ celery -A app.celery_app flower
 ## 🧪 Testing
 
 ```bash
-# Run tests (TODO: Add tests)
+# Run all tests (583 tests)
 pytest
 
 # With coverage
 pytest --cov=app
+
+# Run specific test file
+pytest tests/integration/api/test_dashboard.py -v
 ```
 
 ## 📝 Code Quality
@@ -157,15 +160,19 @@ flake8 app/
 mypy app/
 ```
 
-## ✅ Implementation Status
+## ✅ Implementation Status (Phases 1-5 Complete)
 
 - [x] SQLAlchemy models (11 core + 3 junction tables)
-- [x] Pydantic schemas for request/response validation
+- [x] Pydantic schemas for all modules
 - [x] Business logic services (compliance, workflow, evidence, audit, notification, email)
 - [x] Authentication endpoints (JWT with refresh tokens)
 - [x] CRUD endpoints (31 API endpoints)
-- [x] Unit tests (359 tests)
-- [x] Integration tests (268 tests)
+- [x] Compliance Engine (due date calculation, RAG status, period calculation)
+- [x] Workflow Engine (task creation, state transitions, sequence enforcement)
+- [x] Notification Service (in-app notifications, 8 types)
+- [x] Email Service (SendGrid integration, 7 Jinja2 templates)
+- [x] Celery tasks (reminder engine, instance generation, email notifications)
+- [x] Unit tests + Integration tests (583 tests, 100% pass rate)
 - [x] CI/CD pipeline (GitHub Actions)
 
 ## 📚 API Documentation
@@ -173,6 +180,11 @@ mypy app/
 Once the server is running, visit:
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
+
+### Health Endpoints
+- `GET /api/v1/health/health` - Basic health check
+- `GET /api/v1/health/live` - Kubernetes liveness probe
+- `GET /api/v1/health/ready` - Kubernetes readiness probe
 
 ## 🔐 Security Notes
 
