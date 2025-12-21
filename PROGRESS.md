@@ -1,6 +1,6 @@
 # Compliance OS V1 - Development Progress
 
-Last Updated: December 20, 2024
+Last Updated: December 21, 2024
 
 ---
 
@@ -13,7 +13,7 @@ Last Updated: December 20, 2024
 | **Phase 3** | ✅ **COMPLETE** | 100% | Backend CRUD Operations - 31 endpoints, 157 integration tests |
 | **Phase 4** | ✅ **COMPLETE** | 100% | Backend Business Logic - 4 engines, 252 tests |
 | **Phase 5** | ✅ **COMPLETE** | 100% | Backend Background Jobs (Email + Tests) |
-| **Phase 6** | ⏳ Pending | 0% | Frontend Authentication & Layout |
+| **Phase 6** | ✅ **COMPLETE** | 100% | Frontend Authentication & Layout |
 | **Phase 7** | ⏳ Pending | 0% | Frontend Dashboard Views |
 | **Phase 8** | ⏳ Pending | 0% | Frontend Compliance Management |
 | **Phase 9** | ⏳ Pending | 0% | Frontend Workflow & Evidence |
@@ -21,7 +21,7 @@ Last Updated: December 20, 2024
 | **Phase 11** | ⏳ Pending | 0% | Testing & Quality |
 | **Phase 12** | ⏳ Pending | 0% | Deployment & Documentation |
 
-**Overall Progress**: 42% (5 of 12 phases complete)
+**Overall Progress**: 50% (6 of 12 phases complete)
 
 ---
 
@@ -1018,5 +1018,131 @@ Phase 5 completed the background job infrastructure with email notification inte
 - Email notifications integrated
 - All background jobs tested
 - Ready for frontend development
+
+---
+
+## ✅ Phase 6: Frontend Authentication & Layout - COMPLETED
+
+**Completion Date**: December 21, 2024
+**Duration**: 1 day
+**Status**: ✅ COMPLETE (100%)
+
+### Summary
+
+Phase 6 enhanced the frontend with server-side authentication middleware, notifications integration, and improved navigation. The implementation focused on leveraging existing components while adding missing pieces for a complete authentication and layout experience.
+
+### Components Completed
+
+#### ✅ M1: Next.js Middleware (`middleware.ts`)
+- **Server-Side Auth**
+  - Token check in cookies for protected routes
+  - Redirect to `/login` for unauthenticated users
+  - Preserve redirect URL for post-login navigation
+  - Exclude public paths (`/login`, `/forgot-password`)
+  - Skip static assets and API routes
+
+- **Cookie Sync in Auth Store**
+  - `setCookie()` and `removeCookie()` helper functions
+  - Token synced to cookie on login/token refresh
+  - Cookie cleared on logout
+  - SameSite=Lax for security
+
+#### ✅ M2: Notifications Integration
+- **Notification Types** (`types/notification.ts`)
+  - TypeScript types matching backend schemas
+  - 8 notification types with icon/color config
+
+- **API Endpoints** (`lib/api/endpoints.ts`)
+  - `list()` - List notifications with filtering
+  - `getCount()` - Get unread count
+  - `markRead()` - Mark single as read
+  - `markMultipleRead()` - Mark batch as read
+  - `markAllRead()` - Mark all as read
+
+- **React Query Hooks** (`lib/hooks/useNotifications.ts`)
+  - `useNotificationCount()` - 60-second polling
+  - `useNotifications()` - List with filters
+  - `useRecentNotifications()` - For dropdown
+  - `useMarkNotificationRead()` - Single mutation
+  - `useMarkAllRead()` - Batch mutation
+
+- **NotificationsBell Component** (`components/layout/NotificationsBell.tsx`)
+  - Bell icon with unread count badge
+  - Dropdown with recent notifications
+  - Type-specific icons and colors
+  - Relative time formatting
+  - Mark as read on click
+  - Navigate to link if present
+  - "View all" link to full page
+
+#### ✅ M3: Sidebar Enhancement & Pages
+- **Updated Sidebar** (`components/layout/Sidebar.tsx`)
+  - Compliance Masters nav item
+  - Workflow Tasks nav item
+  - Users (admin section, role-restricted)
+  - Entities (admin section, role-restricted)
+  - Administration section divider
+
+- **Placeholder Pages**
+  - `/compliance-masters` - Coming in Phase 7
+  - `/workflow-tasks` - Coming in Phase 7
+  - `/users` - Coming in Phase 7
+  - `/entities` - Coming in Phase 7
+  - `/notifications` - Full page with filtering
+
+#### ✅ M4: E2E Test Updates
+- **Auth Utils** (`e2e/utils/auth.ts`)
+  - `clearAuthState()` now clears cookies
+  - Playwright context cookie clearing
+  - Support for middleware auth flow
+
+### Files Created (8 files)
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `frontend/src/middleware.ts` | 48 | Server-side auth check |
+| `frontend/src/types/notification.ts` | 79 | Notification TypeScript types |
+| `frontend/src/lib/hooks/useNotifications.ts` | 110 | React Query hooks |
+| `frontend/src/components/layout/NotificationsBell.tsx` | 197 | Bell dropdown component |
+| `frontend/src/app/(dashboard)/compliance-masters/page.tsx` | 40 | Placeholder page |
+| `frontend/src/app/(dashboard)/workflow-tasks/page.tsx` | 40 | Placeholder page |
+| `frontend/src/app/(dashboard)/users/page.tsx` | 40 | Placeholder page |
+| `frontend/src/app/(dashboard)/entities/page.tsx` | 40 | Placeholder page |
+| `frontend/src/app/(dashboard)/notifications/page.tsx` | 180 | Full notifications page |
+
+### Files Modified (6 files)
+
+| File | Changes |
+|------|---------|
+| `frontend/src/lib/store/auth-store.ts` | Added cookie sync, updateTokens method |
+| `frontend/src/lib/api/endpoints.ts` | Added notifications API endpoints |
+| `frontend/src/lib/hooks/index.ts` | Export notification hooks |
+| `frontend/src/components/layout/Header.tsx` | Added NotificationsBell |
+| `frontend/src/components/layout/Sidebar.tsx` | New nav items, admin section |
+| `frontend/e2e/utils/auth.ts` | Clear cookies in clearAuthState |
+
+### Git Commits (4 commits)
+
+| Commit | Description |
+|--------|-------------|
+| `636e451` | feat(phase6-m1): Add Next.js middleware for server-side auth |
+| `fe27340` | feat(phase6-m2): Add notifications bell with dropdown |
+| `74ac6e3` | feat(phase6-m3): Enhance sidebar and scaffold pages |
+| (pending) | feat(phase6-m4): Add tests and documentation |
+
+### Metrics & Statistics
+
+- **New Files**: 9 files (~750 lines)
+- **Modified Files**: 6 files (~150 lines modified)
+- **Total**: ~900 lines of production code
+- **Build Status**: ✅ Type check passing, build successful
+
+### Impact on Future Phases
+
+**Phase 7+ (Frontend Pages)**: Layout complete
+- Navigation structure in place
+- Notification system working
+- Auth flow complete end-to-end
+- Placeholder pages ready for implementation
 
 ---

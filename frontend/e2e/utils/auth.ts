@@ -102,7 +102,7 @@ export async function isLoggedIn(page: Page): Promise<boolean> {
 }
 
 /**
- * Clear authentication state by clearing local storage.
+ * Clear authentication state by clearing local storage and cookies.
  *
  * @param page - Playwright page object
  */
@@ -110,5 +110,10 @@ export async function clearAuthState(page: Page): Promise<void> {
   await page.evaluate(() => {
     localStorage.clear();
     sessionStorage.clear();
+    // Clear accessToken cookie used by middleware
+    document.cookie = 'accessToken=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
   });
+
+  // Also clear cookies via Playwright context
+  await page.context().clearCookies();
 }

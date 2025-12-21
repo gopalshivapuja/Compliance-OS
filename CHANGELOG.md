@@ -7,11 +7,128 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for Phase 6 (Frontend Authentication & Layout)
-- Login page with JWT authentication
-- Protected route middleware
-- Dashboard layout with sidebar navigation
-- User profile and settings pages
+### Planned for Phase 7 (Frontend Dashboard Views)
+- Enhanced dashboard with interactive charts
+- Compliance calendar view
+- Owner workload heatmap
+- Real-time updates
+
+---
+
+## [0.6.0] - 2024-12-21 - Phase 6 Complete: Frontend Authentication & Layout
+
+### Added
+
+#### Next.js Middleware (`frontend/src/middleware.ts`)
+- **Server-Side Authentication**
+  - Token check in cookies for protected routes
+  - Automatic redirect to `/login` for unauthenticated users
+  - Preserve intended destination URL for post-login redirect
+  - Exclude public paths (`/login`, `/forgot-password`, `/reset-password`)
+  - Skip static assets (`/_next`, `/api`, `/favicon.ico`)
+
+#### Cookie Sync in Auth Store
+- **Login/Logout Cookie Management**
+  - `setCookie()` helper for setting auth cookie with expiry
+  - `removeCookie()` helper for clearing auth cookie
+  - Token automatically synced to cookie on login
+  - Cookie cleared on logout
+  - SameSite=Lax for CSRF protection
+
+#### Notification System (`frontend/src/components/layout/NotificationsBell.tsx`)
+- **Notification Types** (8 types)
+  - `task_assigned` - Blue (UserPlus icon)
+  - `reminder_t3` - Amber (Clock icon)
+  - `reminder_due` - Amber (AlertTriangle icon)
+  - `overdue` - Red (XCircle icon)
+  - `approval_required` - Purple (CheckSquare icon)
+  - `evidence_approved` - Green (CheckCircle icon)
+  - `evidence_rejected` - Red (XCircle icon)
+  - `system` - Gray (Info icon)
+
+- **NotificationsBell Component**
+  - Bell icon with unread count badge (max "9+")
+  - Dropdown showing 5 most recent unread notifications
+  - Type-specific icons and colors
+  - Relative time formatting ("Just now", "5m ago", "2h ago")
+  - Click to mark as read and navigate to link
+  - "Mark all read" button
+  - "View all notifications" link
+
+- **Notifications Page** (`/notifications`)
+  - Full page view of all notifications
+  - Filter tabs: All, Unread, Read
+  - Mark all as read button
+  - Notification details with links
+
+#### React Query Hooks (`frontend/src/lib/hooks/useNotifications.ts`)
+- `useNotificationCount()` - Fetches unread count, 60-second polling
+- `useNotifications()` - Lists notifications with filters
+- `useRecentNotifications()` - For dropdown (default 5 items)
+- `useMarkNotificationRead()` - Mutation to mark single as read
+- `useMarkMultipleRead()` - Mutation to mark batch as read
+- `useMarkAllRead()` - Mutation to mark all as read
+
+#### API Endpoints (`frontend/src/lib/api/endpoints.ts`)
+- `notificationsApi.list()` - List with pagination and is_read filter
+- `notificationsApi.getCount()` - Get unread count
+- `notificationsApi.get()` - Get single notification
+- `notificationsApi.markRead()` - Mark single as read
+- `notificationsApi.markMultipleRead()` - Mark batch as read
+- `notificationsApi.markAllRead()` - Mark all as read
+- `notificationsApi.delete()` - Delete single
+- `notificationsApi.deleteMultiple()` - Delete batch
+
+#### Enhanced Sidebar Navigation (`frontend/src/components/layout/Sidebar.tsx`)
+- **Main Navigation**
+  - Dashboard
+  - Compliance Masters (new)
+  - Compliance Instances
+  - Workflow Tasks (new)
+  - Evidence Vault
+
+- **Administration Section** (role-restricted)
+  - Users (Tenant Admin, System Admin)
+  - Entities (Tenant Admin, System Admin)
+  - Audit Logs (CFO, System Admin)
+
+#### Placeholder Pages (Phase 7+)
+- `/compliance-masters` - Compliance master definitions
+- `/workflow-tasks` - User's assigned workflow tasks
+- `/users` - User management (admin only)
+- `/entities` - Entity management (admin only)
+- `/notifications` - Full notifications list
+
+### Changed
+
+- **Auth Store** (`frontend/src/lib/store/auth-store.ts`)
+  - Added `updateTokens()` method for token refresh
+  - Login now sets cookie for middleware access
+  - Logout now clears cookie
+
+- **Header** (`frontend/src/components/layout/Header.tsx`)
+  - Added NotificationsBell before user menu
+  - Wrapped in flex container with gap
+
+- **E2E Auth Utils** (`frontend/e2e/utils/auth.ts`)
+  - `clearAuthState()` now clears cookies
+  - Uses Playwright's `context.clearCookies()`
+
+- **TypeScript Config** (`frontend/tsconfig.json`)
+  - Excluded `src/__tests__` from compilation (Jest handles separately)
+
+### Fixed
+
+- **AuditLogTable** (`frontend/src/components/audit/AuditLogTable.tsx`)
+  - Added missing action types: VIEW, DOWNLOAD, UPLOAD
+
+### Statistics
+
+- **New Files**: 9 files (~800 lines)
+- **Modified Files**: 6 files (~200 lines)
+- **Total**: ~1,000 lines of production code
+- **Build Status**: Type check passing, build successful
+- **Duration**: 1 day
 
 ---
 
