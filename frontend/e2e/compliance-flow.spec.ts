@@ -99,7 +99,8 @@ test.describe('Dashboard', () => {
 test.describe('Compliance Instance List', () => {
   // Helper to navigate to compliance page via sidebar link (preserves SPA state)
   async function navigateToCompliance(page: import('@playwright/test').Page) {
-    const complianceLink = page.getByRole('link', { name: /compliance/i });
+    // Use exact link name to avoid matching "Compliance Masters"
+    const complianceLink = page.getByRole('link', { name: /compliance instances/i });
     await expect(complianceLink).toBeVisible({ timeout: 10000 });
     await complianceLink.click();
     await expect(page).toHaveURL(/\/compliance/, { timeout: 10000 });
@@ -259,8 +260,8 @@ test.describe('Compliance Navigation', () => {
     // Login using loginAs (same pattern as Multi-User tests)
     await loginAs(page, 'cfo');
 
-    // Look for navigation link to compliance
-    const complianceLink = page.getByRole('link', { name: /compliance/i });
+    // Look for navigation link to compliance instances (not compliance masters)
+    const complianceLink = page.getByRole('link', { name: /compliance instances/i });
 
     if (await complianceLink.isVisible()) {
       await complianceLink.click();
@@ -278,8 +279,8 @@ test.describe('Compliance Navigation', () => {
     // Login and go to compliance first
     await loginAs(page, 'cfo');
 
-    // Navigate to compliance via sidebar link (preserves SPA state)
-    const complianceLink = page.getByRole('link', { name: /compliance/i });
+    // Navigate to compliance via sidebar link (use exact name)
+    const complianceLink = page.getByRole('link', { name: /compliance instances/i });
     await expect(complianceLink).toBeVisible({ timeout: 10000 });
     await complianceLink.click();
     await expect(page).toHaveURL(/\/compliance/, { timeout: 10000 });
