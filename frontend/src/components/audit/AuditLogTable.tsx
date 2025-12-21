@@ -22,6 +22,9 @@ const actionTypeColors: Record<ActionType, string> = {
   LOGOUT: 'bg-gray-100 text-gray-800',
   APPROVE: 'bg-green-100 text-green-800',
   REJECT: 'bg-red-100 text-red-800',
+  VIEW: 'bg-gray-100 text-gray-800',
+  DOWNLOAD: 'bg-blue-100 text-blue-800',
+  UPLOAD: 'bg-purple-100 text-purple-800',
 }
 
 export function AuditLogTable({ logs, isLoading }: AuditLogTableProps) {
