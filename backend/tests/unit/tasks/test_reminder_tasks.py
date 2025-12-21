@@ -9,18 +9,15 @@ Tests cover:
 - Notification cleanup
 """
 
-import pytest
 from datetime import date, timedelta
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock
 from uuid import uuid4
 
 from app.models import (
     Tenant,
     ComplianceInstance,
-    ComplianceMaster,
     User,
     WorkflowTask,
-    Role,
 )
 
 
@@ -254,7 +251,7 @@ class TestEscalateOverdueItems:
         mock_get_escalation_user.side_effect = [cfo1, cfo2]
         mock_notify.return_value = MagicMock()
 
-        result = escalate_overdue_items()
+        escalate_overdue_items()
 
         assert mock_get_escalation_user.call_count == 2
 

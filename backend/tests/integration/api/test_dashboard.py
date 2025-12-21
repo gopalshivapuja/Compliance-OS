@@ -6,6 +6,7 @@ Includes multi-tenant isolation, RAG aggregation, and pagination tests.
 
 import pytest
 from datetime import date, timedelta
+from starlette.testclient import TestClient
 
 from app.models import (
     Tenant,

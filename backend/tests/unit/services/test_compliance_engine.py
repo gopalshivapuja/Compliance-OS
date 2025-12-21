@@ -12,7 +12,7 @@ Test Categories:
 """
 
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from app.services.compliance_engine import (
     calculate_due_date,

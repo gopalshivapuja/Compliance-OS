@@ -9,12 +9,11 @@ Tests cover:
 - Overdue status updates
 """
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
 
-from app.models import Tenant, ComplianceInstance, ComplianceMaster, Entity
+from app.models import Tenant, ComplianceInstance
 
 
 class TestGenerateComplianceInstancesDaily:

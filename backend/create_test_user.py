@@ -46,9 +46,9 @@ def create_test_data():
             print("      cd backend && python -m app.seeds.run_seed")
             return
 
-        print(f"   ✓ Found CFO role")
-        print(f"   ✓ Found System Admin role")
-        print(f"   ✓ Found Tax Lead role")
+        print("   ✓ Found CFO role")
+        print("   ✓ Found System Admin role")
+        print("   ✓ Found Tax Lead role")
 
         # 3. Create test users with different roles
         print("\n3. Creating test users...")

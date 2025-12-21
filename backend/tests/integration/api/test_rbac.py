@@ -6,6 +6,7 @@ Includes entity-level access control and multi-tenant isolation tests.
 
 import pytest
 from datetime import date, timedelta
+from starlette.testclient import TestClient
 
 from app.models import (
     Tenant,
